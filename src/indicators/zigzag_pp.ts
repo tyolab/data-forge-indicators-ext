@@ -1,6 +1,12 @@
 import { assert } from 'chai';
 import { ISeries, Series } from 'data-forge';
 
+/**
+ * ZigZag++ as implemented in the tradingview
+ * 
+ * the indicator (extrema) groups the price the linearly up or down 
+ */
+
 export interface IZigZag_PP {
     /**
      * "hh", "hl", "lh", "ll"
