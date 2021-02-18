@@ -14,24 +14,28 @@ declare module "data-forge/build/lib/dataframe" {
 }
 
 function atr<IndexT = any>(this: IDataFrame<IndexT, OHLC>, period: number = 14): ISeries<IndexT, number> {
-
-    return this.rollingWindow(period)
-        .select<[IndexT, number]>(window => {
-            var count = window.count();
-            var ranges = 0;
-            for (var i = 0; i < count; ++i) {
-            const day1 = window.first().close;
-            const day2 = window.last().open;
-
-            }
+    // as we can do the first day's range
+   return this.rollingWindow(period + 1)
+        .select<[IndexT, number]>((window1) => {
+            
+            let ranges = window1.rollingWindow(2)
+            .select<number>(window => {
+                const day1 = window.first();
+                const day2 = window.last();
+                const r1 = Math.abs(day2.high - day2.low);
+                const r2 = Math.abs(day2.high - day1.close);
+                const r3 = Math.abs(day2.low - day1.close);
+                const r = Math.max(r1, Math.max(r2, r3));
+                return r;
+            });
 
             return [
-                window.getIndex().last(),
-                ranges / period,
+                window1.getIndex().last(),
+                ranges.average()
             ];
         })
-        .withIndex(pair => pair[0])
-        .select(pair => pair[1]);
+        .withIndex(pair1 => pair1[0])
+        .select(pair1 => pair1[1]);
 }
 
 DataFrame.prototype.atr = atr;
