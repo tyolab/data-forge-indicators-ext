@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { ISeries, Series } from 'data-forge';
+import { DataFrame, ISeries, Series } from 'data-forge';
 
 /**
  * ZigZag++ as implemented in the tradingview
@@ -28,9 +28,16 @@ function zigzag_pp<IndexT = any>(this: ISeries<IndexT, number>, depth: number = 
 
 	assert.isNumber(depth, "Expected 'depth' parameter to 'Series.sma' to be a number that specifies the time depth of the moving average.");
 
-    let extrema: any = [];
+
     let stack: any = [];
     let self = this;
+    let count = this.count();
+ 
+    let extrema: number[] = new Array(count);
+    let array = new Array(count);
+    for (var i = 0; i < extrema.length; ++i) {
+        extrema[i] = 0.0;
+    }
 
     let max = function (window: ISeries<IndexT, number>):number[] {
         let max = 0;
@@ -62,9 +69,10 @@ function zigzag_pp<IndexT = any>(this: ISeries<IndexT, number>, depth: number = 
 
             let maxPair:number[] = max(window);
             let minPair:number[] = min(window);
-
-            extrema.push(minPair);
-            extrema.push(maxPair);
+                            
+            let higher = maxPair[0] > minPair[0];
+            let le: any | undefined | null = higher? minPair : maxPair;
+            let re: any | undefined | null = higher? maxPair : minPair;
 
             // for penny stocks
             let mintick = 0.001;
@@ -80,53 +88,100 @@ function zigzag_pp<IndexT = any>(this: ISeries<IndexT, number>, depth: number = 
              * {direction: 1/-1, window: []}
              */
             var s1: number = 0, s2: number = 0, s3: number = 0, e1: number = 0, e2: number = 0, e3: number = 0;
-            let diff = Math.abs(maxPair[1] - minPair[1]);
+            //let bd1 = higher && leftExtremum ? Math.abs(start + minPair[0] - leftExtremum[0]);
+            //let diff = Math.abs(maxPair[1] - minPair[1]);
             // not enough bars we need to marge them to the neibouring window
             // if (maxPair[0] - minPair[0] < depth)  {
 
             // }
             // else {
-                e2 = minPair[0] + 1;
-                e3 = maxPair[0] - 1;
-            // }
-
-            //if (minPair[0] > depth) {
-                s1 = start;
-                e1 = minPair[0] - 1;
-            //}
-
-            //if (end - maxPair[0] > depth) {
-                s3 = maxPair[0] + 1;
-                e3 = end;
-                
-            let higher = maxPair[0] > minPair[0];
-            //}
-                
-            // if the midwindow is less than bars of depth, it is ok, 
-            //if (e1 > s1)
-            if (direction == 0) {
-                stack.push({
-                    direction: higher ? -1 : 1,
-                    window: [s1, e1],
-                    extremum: [null, higher ? minPair : maxPair]
-                });
+                s2 = le[0] + 1;
+                e2 = re[0] - 1;
+            if (e2 - s2 > depth) {
                 stack.push({
                     direction: higher ? 1 : -1,
                     window: [s2, e2],
-                    extremum: [higher ? minPair : maxPair, higher ? maxPair : minPair, null]
+                    extremum: [le, re]
                 });
+            }
+            else {
+                let df = Math.abs(le[1] - re[1]) - deviation * mintick;
+                if (df < 0) {
+                    // just use the left one
+                    re = le;
+                    // if (direction > 0)
+                    //     le = re;
+                    // else
+                    //     re = le;
+                }
+            }
+            //
+            // else
+            // don't need to do anything, as the edges of the window have the extrema 
+            // 
+            //if (minPair[0] > depth) {
+            s1 = start;
+            e1 = le[0] - 1;
+            if (e1 - s1 < depth) {
+                // don't need to put it into the stack
+                if (leftExtremum) {
+                    let df = Math.abs(leftExtremum[1] - le[1]) - deviation * mintick;
+                    if (df < 0) {
+                        // // too small the different beween the extrema is, we will only use one
+                        // if (higher) {
+                        //     le = (leftExtremum[1] < le[1] ? leftExtremum : le)
+                        // }
+                        // else {
+                        //     le = (leftExtremum[1] > le[1] ? leftExtremum : le)
+                        // }
+                        le = null;
+                    }
+
+                }
+            }
+            else {
+                stack.push({
+                    direction: higher ? -1 : 1,
+                    window: [s1, e1],
+                    extremum: [leftExtremum, higher ? minPair : maxPair]
+                });
+            }
+            //}
+
+            //if (end - maxPair[0] > depth) {
+                s3 = re[0] + 1;
+                e3 = end;
+            if (e3 - s3 < depth) {
+                // don't need to put it into the stack
+                if (rightExtremum) {
+                    let df = Math.abs(rightExtremum[1] - re[1]) - deviation * mintick;
+                    if (df < 0) {
+                        // too small the different beween the extrema is, we will only use one
+                        // if (higher) {
+                        //     re = (rightExtremum[1] < re[1] ? rightExtremum : re)
+                        // }
+                        // else {
+                        //     re = (rightExtremum[1] > re[1] ? rightExtremum : re)
+                        // }
+                        re = null;
+                    }
+
+                }
+            }
+            else {
                 stack.push({
                     direction: higher ? -1 : 1,
                     window: [s3, e3],
-                    extremum: [higher ? maxPair : minPair, null]
+                    extremum: [higher ? maxPair : minPair, rightExtremum]
                 });
             }
-            else if (direction == 1) {
+            
+            if (le) {
+                extrema[le[0]] = (le[1]);
+            }
 
-            }
-            else {
-                
-            }
+            if (re && (!le || re[0] != le[0]))
+                extrema[re[0]] = re[1];
         }
 
     }
@@ -138,10 +193,7 @@ function zigzag_pp<IndexT = any>(this: ISeries<IndexT, number>, depth: number = 
         stackLoop(self.between(todo.window[0], todo.window[1]), todo.window[0], todo.window[1], todo.direction, todo.extremum);
     }
 
-    return this.rollingWindow(depth)
-        .select<[IndexT, number]>(window => [window.getIndex().last(), window.average()])
-        .withIndex(pair => pair[0])
-        .select(pair => pair[1]);
+    return new Series({values: extrema});
 }
 
 Series.prototype.zigzag_pp = zigzag_pp;

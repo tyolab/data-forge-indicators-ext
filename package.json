@@ -1,5 +1,5 @@
 {
-    "name": "data-forge-indicators",
+    "name": "data-forge-indicators-ext",
     "version": "0.0.1",
     "description": "An extension for Data-Forge-Indicators.",
     "main": "build/index.js",
@@ -24,8 +24,7 @@
         "type": "git",
         "url": "git+https://github.com/data-forge/data-forge-indicators-ext.git"
     },
-    "keywords": [
-    ],
+    "keywords": [],
     "author": "eric@tyo.com.au",
     "license": "MIT",
     "bugs": {
