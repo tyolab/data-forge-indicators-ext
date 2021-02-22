@@ -1,37 +1,30 @@
 import { assert } from 'chai';
-import { DataFrame, ISeries, Series } from 'data-forge';
+import { ISeries, Series } from 'data-forge';
+import { IDataFrame, DataFrame } from 'data-forge';
+import { OHLC } from './ohlc';
 
 /**
  * ZigZag++ as implemented in the tradingview
  * 
  * the indicator (extrema) groups the price the linearly up or down 
  */
-
-export interface IZigZag_PP {
-    /**
-     * "hh", "hl", "lh", "ll"
-     */
-    point: string;
-}
-
-declare module "data-forge/build/lib/series" {
-    interface ISeries<IndexT, ValueT> {
-        zigzag_pp(depth: number, deviation: number, backStep: number): ISeries<IndexT, number>;
+declare module "data-forge/build/lib/dataframe" {
+    interface IDataFrame<IndexT, ValueT> {
+        zigzag_pp(depth: number, deviation: number): ISeries<IndexT, number>;
     }
 
-    interface Series<IndexT, ValueT> {
-        zigzag_pp(depth: number, deviation: number, backStep: number): ISeries<IndexT, number>;
+    interface DataFrame<IndexT, ValueT> {
+        zigzag_pp(depth: number, deviation: number): ISeries<IndexT, number>;
     }
 }
 
-function zigzag_pp<IndexT = any>(this: ISeries<IndexT, number>, depth: number = 12, deviation: number = 5, backStep: number = 3): ISeries<IndexT, number> {
+function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number = 12, deviation: number = 5): ISeries<IndexT, number> {
 
 	assert.isNumber(depth, "Expected 'depth' parameter to 'Series.sma' to be a number that specifies the time depth of the moving average.");
 
-
     let stack: any = [];
-    let self = this;
-    let count = this.count();
+    let self = this.resetIndex();
+    let count = self.count();
  
     let extrema: number[] = new Array(count);
     let array = new Array(count);
@@ -39,29 +32,31 @@ function zigzag_pp<IndexT = any>(this: ISeries<IndexT, number>, depth: number = 
         extrema[i] = 0.0;
     }
 
-    let max = function (window: ISeries<IndexT, number>):number[] {
-        let max = 0;
+    let max = function (window: IDataFrame<number, OHLC>):number[] {
+        let max:number = 0;
         let maxIndex = -1;
         window.forEach((value, index) => {
-            max = Math.max(max, value);
-            if (max == value)
+            max = Math.max(max, value.high);
+            if (max == value.high)
                 maxIndex = index;
         });
         return [maxIndex, max];
     }
 
-    let min = function (window: ISeries<IndexT, number>):number[] {
-        let min = 0;
+    let min = function (window: IDataFrame<number, OHLC>):number[] {
+        let min:number = 0;
         let minIndex = -1;
         window.forEach((value, index) => {
-            min = Math.min(min, value);
-            if (min == value)
+            if (min == 0)
+                min = value.low;
+            min = Math.min(min, value.low);
+            if (min == value.low)
                 minIndex = index;
         });
         return [minIndex, min];
     }
 
-    var stackLoop = function (window: ISeries<IndexT, number>, start: number, end: number, direction: number = 0, extremum: any = null) {
+    var stackLoop = function (window: IDataFrame<number, OHLC>, start: number, end: number, direction: number = 0, extremum: any = null) {
         let leftExtremum = extremum && extremum[0]? extremum[0] : null;
         let rightExtremum = extremum && extremum[1]? extremum[1] : null; 
 
@@ -80,7 +75,7 @@ function zigzag_pp<IndexT = any>(this: ISeries<IndexT, number>, depth: number = 
                 mintick = 0.05;
             else if (minPair[1] > 1 && minPair[1] <= 10)
                 mintick = 0.25;
-            else 
+            else if (minPair[1] > 10)
                 mintick = 0.5;
             
             /**
@@ -95,8 +90,8 @@ function zigzag_pp<IndexT = any>(this: ISeries<IndexT, number>, depth: number = 
 
             // }
             // else {
-                s2 = le[0] + 1;
-                e2 = re[0] - 1;
+                s2 = le[0] + 1 + start;
+                e2 = re[0] - 1 + start;
             if (e2 - s2 > depth) {
                 stack.push({
                     direction: higher ? 1 : -1,
@@ -121,7 +116,7 @@ function zigzag_pp<IndexT = any>(this: ISeries<IndexT, number>, depth: number = 
             // 
             //if (minPair[0] > depth) {
             s1 = start;
-            e1 = le[0] - 1;
+            e1 = le[0] - 1 + start;
             if (e1 - s1 < depth) {
                 // don't need to put it into the stack
                 if (leftExtremum) {
@@ -149,9 +144,10 @@ function zigzag_pp<IndexT = any>(this: ISeries<IndexT, number>, depth: number = 
             //}
 
             //if (end - maxPair[0] > depth) {
-                s3 = re[0] + 1;
+                s3 = re[0] + 1 + start;
                 e3 = end;
-            if (e3 - s3 < depth) {
+            let bd3 = e3 - s3;
+            if (bd3 > -1 && bd3 < depth) {
                 // don't need to put it into the stack
                 if (rightExtremum) {
                     let df = Math.abs(rightExtremum[1] - re[1]) - deviation * mintick;
@@ -186,14 +182,17 @@ function zigzag_pp<IndexT = any>(this: ISeries<IndexT, number>, depth: number = 
 
     }
 
-    stackLoop(this, 0, this.count() - 1);
+    stackLoop(self, 0, this.count() - 1);
 
     while (stack.length > 0) {
         let todo = stack.shift();
-        stackLoop(self.between(todo.window[0], todo.window[1]), todo.window[0], todo.window[1], todo.direction, todo.extremum);
+        var from =todo.window[0], to= todo.window[1];
+        let win: IDataFrame<number, OHLC> = self.between(from, to);
+        win.bake();     
+        stackLoop(win, from, to, todo.direction, todo.extremum);
     }
 
     return new Series({values: extrema});
 }
 
-Series.prototype.zigzag_pp = zigzag_pp;
+DataFrame.prototype.zigzag_pp = zigzag_pp;
