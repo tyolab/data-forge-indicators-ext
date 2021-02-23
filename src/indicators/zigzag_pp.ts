@@ -27,7 +27,6 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
     let count = self.count();
  
     let extrema: number[] = new Array(count);
-    let array = new Array(count);
     for (var i = 0; i < extrema.length; ++i) {
         extrema[i] = 0.0;
     }
@@ -47,8 +46,10 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
         let min:number = 0;
         let minIndex = -1;
         window.forEach((value, index) => {
-            if (min == 0)
+            if (min == 0) {
                 min = value.low;
+                minIndex = index;
+            }
             min = Math.min(min, value.low);
             if (min == value.low)
                 minIndex = index;
@@ -64,7 +65,11 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
 
             let maxPair:number[] = max(window);
             let minPair:number[] = min(window);
-                            
+            
+            // put the offset back
+            maxPair[0] += start;
+            minPair[0] += start;
+
             let higher = maxPair[0] > minPair[0];
             let le: any | undefined | null = higher? minPair : maxPair;
             let re: any | undefined | null = higher? maxPair : minPair;
@@ -138,16 +143,15 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
                 stack.push({
                     direction: higher ? -1 : 1,
                     window: [s1, e1],
-                    extremum: [leftExtremum, higher ? minPair : maxPair]
+                    extremum: [leftExtremum, le]  // left side of the window
                 });
             }
             //}
 
             //if (end - maxPair[0] > depth) {
-                s3 = re[0] + 1 + start;
-                e3 = end;
-            let bd3 = e3 - s3;
-            if (bd3 > -1 && bd3 < depth) {
+            s3 = re[0] + 1 + start;
+            e3 = end;
+            if (e3 -s3 < depth) {
                 // don't need to put it into the stack
                 if (rightExtremum) {
                     let df = Math.abs(rightExtremum[1] - re[1]) - deviation * mintick;
@@ -168,7 +172,7 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
                 stack.push({
                     direction: higher ? -1 : 1,
                     window: [s3, e3],
-                    extremum: [higher ? maxPair : minPair, rightExtremum]
+                    extremum: [re, rightExtremum]  // right side of the window
                 });
             }
             
