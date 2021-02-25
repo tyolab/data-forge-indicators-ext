@@ -95,8 +95,8 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
 
             // }
             // else {
-                s2 = le[0] + 1 + start;
-                e2 = re[0] - 1 + start;
+                s2 = le[0] + 1;
+                e2 = re[0] - 1;
             if (e2 - s2 > depth) {
                 stack.push({
                     direction: higher ? 1 : -1,
@@ -121,7 +121,7 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
             // 
             //if (minPair[0] > depth) {
             s1 = start;
-            e1 = le[0] - 1 + start;
+            e1 = le[0] - 1;
             if (e1 - s1 < depth) {
                 // don't need to put it into the stack
                 if (leftExtremum) {
@@ -149,7 +149,7 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
             //}
 
             //if (end - maxPair[0] > depth) {
-            s3 = re[0] + 1 + start;
+            s3 = re[0] + 1;
             e3 = end;
             if (e3 -s3 < depth) {
                 // don't need to put it into the stack
