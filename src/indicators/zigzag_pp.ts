@@ -71,6 +71,18 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
             minPair[0] += start;
 
             let higher = maxPair[0] > minPair[0];
+
+            /**
+             * If this part of the price has the same trend of the parent trend 
+             * we will just skip it
+             */
+            if (!leftExtremum && !rightExtremum) {
+                if (higher && rightExtremum[1] > leftExtremum[1])
+                    return;
+                else if (!higher && leftExtremum[1] > rightExtremum[1])
+                    return;
+            }
+
             let le: any | undefined | null = higher? minPair : maxPair;
             let re: any | undefined | null = higher? maxPair : minPair;
 
@@ -88,15 +100,9 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
              * {direction: 1/-1, window: []}
              */
             var s1: number = 0, s2: number = 0, s3: number = 0, e1: number = 0, e2: number = 0, e3: number = 0;
-            //let bd1 = higher && leftExtremum ? Math.abs(start + minPair[0] - leftExtremum[0]);
-            //let diff = Math.abs(maxPair[1] - minPair[1]);
-            // not enough bars we need to marge them to the neibouring window
-            // if (maxPair[0] - minPair[0] < depth)  {
 
-            // }
-            // else {
-                s2 = le[0] + 1;
-                e2 = re[0] - 1;
+            s2 = le[0] + 1;
+            e2 = re[0] - 1;
             if (e2 - s2 > depth) {
                 stack.push({
                     direction: higher ? 1 : -1,
@@ -115,11 +121,7 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
                     //     re = le;
                 }
             }
-            //
-            // else
-            // don't need to do anything, as the edges of the window have the extrema 
-            // 
-            //if (minPair[0] > depth) {
+
             s1 = start;
             e1 = le[0] - 1;
             if (e1 - s1 < depth) {
@@ -127,13 +129,6 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
                 if (leftExtremum) {
                     let df = Math.abs(leftExtremum[1] - le[1]) - deviation * mintick;
                     if (df < 0) {
-                        // // too small the different beween the extrema is, we will only use one
-                        // if (higher) {
-                        //     le = (leftExtremum[1] < le[1] ? leftExtremum : le)
-                        // }
-                        // else {
-                        //     le = (leftExtremum[1] > le[1] ? leftExtremum : le)
-                        // }
                         le = null;
                     }
 
@@ -146,9 +141,7 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
                     extremum: [leftExtremum, le]  // left side of the window
                 });
             }
-            //}
 
-            //if (end - maxPair[0] > depth) {
             s3 = re[0] + 1;
             e3 = end;
             if (e3 -s3 < depth) {
