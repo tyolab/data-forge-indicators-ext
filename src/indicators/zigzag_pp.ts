@@ -73,15 +73,19 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
             let higher = maxPair[0] > minPair[0];
 
             /**
+             * @todo
+             * No, we don't need this part here, this part will make lots of extrema dispeared
+             * but we do need this part in other place
+             * ======
              * If this part of the price has the same trend of the parent trend 
              * we will just skip it
              */
-            if (leftExtremum && rightExtremum) {
-                if (higher && rightExtremum[1] > leftExtremum[1])
-                    return;
-                else if (!higher && leftExtremum[1] > rightExtremum[1])
-                    return;
-            }
+            // if (leftExtremum && rightExtremum) {
+            //     if (higher && rightExtremum[1] > leftExtremum[1])
+            //         return;
+            //     else if (!higher && leftExtremum[1] > rightExtremum[1])
+            //         return;
+            // }
 
             let le: any | undefined | null = higher? minPair : maxPair;
             let re: any | undefined | null = higher? maxPair : minPair;
