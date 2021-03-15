@@ -76,7 +76,7 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
              * If this part of the price has the same trend of the parent trend 
              * we will just skip it
              */
-            if (!leftExtremum && !rightExtremum) {
+            if (leftExtremum && rightExtremum) {
                 if (higher && rightExtremum[1] > leftExtremum[1])
                     return;
                 else if (!higher && leftExtremum[1] > rightExtremum[1])
