@@ -38,7 +38,7 @@ function rs<IndexT = any>(this: ISeries<IndexT, number>, comparative: ISeries<In
             // @ts-ignore
             return [
                 window.getIndex().last(),
-                (day1 / day2) / (c1 / c2) -1
+                (day2 / day1) / (c2 / c1) -1
             ];
         })
         .withIndex(pair1 => pair1[0])
