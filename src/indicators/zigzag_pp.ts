@@ -80,30 +80,42 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
              * If this part of the price has the same trend of the parent trend 
              * we will just skip it
              */
-            // if (leftExtremum && rightExtremum) {
-            //     if (higher && rightExtremum[1] > leftExtremum[1])
-            //         return;
-            //     else if (!higher && leftExtremum[1] > rightExtremum[1])
-            //         return;
-            // }
 
             let le: any | undefined | null = higher? minPair : maxPair;
             let re: any | undefined | null = higher? maxPair : minPair;
 
             // for penny stocks
-            let mintick = 0.001;
+            var mintick = 0.001;
             if (minPair[1] > 0.1 && minPair[1] <= 1)
-                mintick = 0.05;
+                mintick = 0.005;
             else if (minPair[1] > 1 && minPair[1] <= 10)
-                mintick = 0.25;
+                mintick = 0.005;
             else if (minPair[1] > 10)
-                mintick = 0.5;
-            
+                mintick = 0.01;
             /**
              * object
              * {direction: 1/-1, window: []}
              */
-            var s1: number = 0, s2: number = 0, s3: number = 0, e1: number = 0, e2: number = 0, e3: number = 0;
+            var s1 = 0, s2 = 0, s3 = 0, e1 = 0, e2 = 0, e3 = 0;
+            s1 = start;
+            e1 = le[0] - 1;
+            if (e1 - s1 > depth) {
+                stack.push({
+                    direction: higher ? -1 : 1,
+                    window: [s1, e1],
+                    extremum: [leftExtremum, le] // left side of the window
+                });
+            }
+
+            s3 = re[0] + 1;
+            e3 = end;
+            if (e3 - s3 > depth) {
+                stack.push({
+                    direction: higher ? -1 : 1,
+                    window: [s3, e3],
+                    extremum: [re, rightExtremum] // right side of the window
+                });
+            }
 
             s2 = le[0] + 1;
             e2 = re[0] - 1;
@@ -115,70 +127,51 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
                 });
             }
             else {
-                let df = Math.abs(le[1] - re[1]) - deviation * mintick;
-                if (df < 0) {
+                var mdf = Math.abs(le[1] - re[1]) - deviation * mintick;
+                if (mdf < 0) {
                     // just use the left one
-                    re = le;
-                    // if (direction > 0)
-                    //     le = re;
-                    // else
-                    //     re = le;
-                }
-            }
-
-            s1 = start;
-            e1 = le[0] - 1;
-            if (e1 - s1 < depth) {
-                // don't need to put it into the stack
-                if (leftExtremum) {
-                    let df = Math.abs(leftExtremum[1] - le[1]) - deviation * mintick;
-                    if (df < 0) {
-                        le = null;
+                    //re = le;
+                    if (direction > 0) {
+                        if (re[1] > le[1]) {
+                            le = re;
+                        }
+                        else {
+                            re = le;
+                        }
                     }
-
-                }
-            }
-            else {
-                stack.push({
-                    direction: higher ? -1 : 1,
-                    window: [s1, e1],
-                    extremum: [leftExtremum, le]  // left side of the window
-                });
-            }
-
-            s3 = re[0] + 1;
-            e3 = end;
-            if (e3 -s3 < depth) {
-                // don't need to put it into the stack
-                if (rightExtremum) {
-                    let df = Math.abs(rightExtremum[1] - re[1]) - deviation * mintick;
-                    if (df < 0) {
-                        // too small the different beween the extrema is, we will only use one
-                        // if (higher) {
-                        //     re = (rightExtremum[1] < re[1] ? rightExtremum : re)
-                        // }
-                        // else {
-                        //     re = (rightExtremum[1] > re[1] ? rightExtremum : re)
-                        // }
-                        re = null;
+                    else {
+                        if (re[1] < le[1]) {
+                            le = re;
+                        }
+                        else {
+                            re = le;
+                        }
                     }
-
                 }
             }
-            else {
-                stack.push({
-                    direction: higher ? -1 : 1,
-                    window: [s3, e3],
-                    extremum: [re, rightExtremum]  // right side of the window
-                });
-            }
-            
+
             if (le) {
-                extrema[le[0]] = (le[1]);
+                // now check the left extremum
+                var ld = leftExtremum ? le[0] - leftExtremum[0] : depth + 1;
+                if (ld > depth)
+                    extrema[le[0]] = le[1];
+                else if (ld > 1) {
+                    // they are not suppose to be together
+                    var ldf = leftExtremum ? Math.abs(leftExtremum[1] - le[1]) - deviation * mintick : 1;
+                    if (ldf > 0)
+                        extrema[le[0]] = le[1];
+                }
             }
-
-            if (re && (!le || re[0] != le[0]))
-                extrema[re[0]] = re[1];
+            if (re && (!le || re[0] != le[0])) {
+                var rd = rightExtremum ? re[0] - rightExtremum[0] : depth + 1;
+                if (rd > depth)
+                    extrema[re[0]] = re[1];
+                else if (rd > 1) {
+                    var rdf = rightExtremum ? Math.abs(rightExtremum[1] - re[1]) - deviation * mintick : 1;
+                    if (rdf > 0)
+                        extrema[re[0]] = re[1];
+                }
+            }
         }
 
     }
