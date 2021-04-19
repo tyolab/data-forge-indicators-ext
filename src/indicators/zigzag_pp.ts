@@ -62,28 +62,28 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
         let rightExtremum = extremum && extremum[1]? extremum[1] : null; 
 
         if (window.count() > depth) {
-
-            let maxPair:number[] = max(window);
-            let minPair:number[] = min(window);
-            
+            var maxPair = max(window);
+            var minPair = min(window);
             // put the offset back
             maxPair[0] += start;
             minPair[0] += start;
-
-            let higher = maxPair[0] > minPair[0];
-
+            var higher = maxPair[0] > minPair[0];
             /**
              * @todo
              * No, we don't need this part here, this part will make lots of extrema dispeared
              * but we do need this part in other place
              * ======
-             * If this part of the price has the same trend of the parent trend 
+             * If this part of the price has the same trend of the parent trend
              * we will just skip it
              */
-
-            let le: any | undefined | null = higher? minPair : maxPair;
-            let re: any | undefined | null = higher? maxPair : minPair;
-
+            // if (leftExtremum && rightExtremum) {
+            //     if (higher && rightExtremum[1] > leftExtremum[1])
+            //         return;
+            //     else if (!higher && leftExtremum[1] > rightExtremum[1])
+            //         return;
+            // }
+            var le: Array<number> = higher ? minPair : maxPair;
+            var re: Array<number> = higher ? maxPair : minPair;
             // for penny stocks
             var mintick = 0.001;
             if (minPair[1] > 0.1 && minPair[1] <= 1)
@@ -97,6 +97,8 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
              * {direction: 1/-1, window: []}
              */
             var s1 = 0, s2 = 0, s3 = 0, e1 = 0, e2 = 0, e3 = 0;
+            var ldf = null, rdf = null;
+
             s1 = start;
             e1 = le[0] - 1;
             if (e1 - s1 > depth) {
@@ -105,8 +107,16 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
                     window: [s1, e1],
                     extremum: [leftExtremum, le] // left side of the window
                 });
+                
             }
+            else {
+                ldf = leftExtremum ? Math.abs(leftExtremum[1] - le[1]) - deviation * mintick : 1;
 
+                if (ldf < 0) {
+                    // the left extremum are not much different
+                    le = leftExtremum;
+                }
+            }
             s3 = re[0] + 1;
             e3 = end;
             if (e3 - s3 > depth) {
@@ -116,58 +126,86 @@ function zigzag_pp<IndexT = any>(this: IDataFrame<IndexT, OHLC>, depth: number =
                     extremum: [re, rightExtremum] // right side of the window
                 });
             }
-
-            s2 = le[0] + 1;
-            e2 = re[0] - 1;
-            if (e2 - s2 > depth) {
-                stack.push({
-                    direction: higher ? 1 : -1,
-                    window: [s2, e2],
-                    extremum: [le, re]
-                });
-            }
             else {
-                var mdf = Math.abs(le[1] - re[1]) - deviation * mintick;
-                if (mdf < 0) {
-                    // just use the left one
-                    //re = le;
-                    if (direction > 0) {
-                        if (re[1] > le[1]) {
-                            le = re;
+                rdf = rightExtremum ? Math.abs(rightExtremum[1] - re[1]) - deviation * mintick : 1;
+
+                if (rdf < 0) {
+                    // the right extremum are not much different with each other
+                    // will will simply take the right
+                    re = rightExtremum;
+                }
+            }
+            // if the left and right extremum are right at the end, we don't need to slipt again
+            if (le != leftExtremum || re != rightExtremum) {
+                s2 = le[0] + 1;
+                e2 = re[0] - 1;
+                if (e2 - s2 > depth) {
+                    stack.push({
+                        direction: higher ? 1 : -1,
+                        window: [s2, e2],
+                        extremum: [le, re]
+                    });
+                }
+                else {
+                    var mdf = Math.abs(le[1] - re[1]) - deviation * mintick;
+                    if (mdf < 0) {
+                        // if the middle extremum are not much different, 
+                        // they need to be both bigger or smaller than the left / right extremum
+
+                        // so
+                        if (leftExtremum && rightExtremum) {
+                            if ( (leftExtremum[1] > le[1] && le[1] < rightExtremum) 
+                                || 
+                                (leftExtremum[1] < le[1] && le[1] > rightExtremum) 
+                            ) {
+                                if (leftExtremum[1] > le[1]) {
+                                    // we pick the smallest one
+                                    if (le[1] > re[1])
+                                        le[0] = -1;
+                                    else
+                                        re[0] = -1;
+                                }
+                                else if (leftExtremum[1] < le[1]) {
+                                     // we pick the biggest one
+                                     if (le[1] < re[1])
+                                        le[0] = -1;
+                                    else
+                                        re[0] = -1;
+                                }
+                            }
                         }
                         else {
-                            re = le;
-                        }
-                    }
-                    else {
-                        if (re[1] < le[1]) {
-                            le = re;
-                        }
-                        else {
-                            re = le;
+                            // I don't think that is even possible for the code to come in here
+                            // when this is happen
+                            // the price actions are just two straight lines
+                            console.log("The impossible just happens.");
+                            le[0] = -1;
+                            re[0] = -1;
                         }
                     }
                 }
             }
 
-            if (le) {
+            if (le[0] > -1 && le != leftExtremum) {
                 // now check the left extremum
                 var ld = leftExtremum ? le[0] - leftExtremum[0] : depth + 1;
                 if (ld > depth)
                     extrema[le[0]] = le[1];
                 else if (ld > 1) {
                     // they are not suppose to be together
-                    var ldf = leftExtremum ? Math.abs(leftExtremum[1] - le[1]) - deviation * mintick : 1;
+                    if (null == ldf)
+                        ldf = leftExtremum ? Math.abs(leftExtremum[1] - le[1]) - deviation * mintick : 1;
                     if (ldf > 0)
                         extrema[le[0]] = le[1];
                 }
             }
-            if (re && (!le || re[0] != le[0])) {
+            if (re[0] > -1  && re != rightExtremum && (le[0] == -1 || re[0] != le[0])) {
                 var rd = rightExtremum ? re[0] - rightExtremum[0] : depth + 1;
                 if (rd > depth)
                     extrema[re[0]] = re[1];
                 else if (rd > 1) {
-                    var rdf = rightExtremum ? Math.abs(rightExtremum[1] - re[1]) - deviation * mintick : 1;
+                    if (null == rdf)
+                        rdf = rightExtremum ? Math.abs(rightExtremum[1] - re[1]) - deviation * mintick : 1;
                     if (rdf > 0)
                         extrema[re[0]] = re[1];
                 }
