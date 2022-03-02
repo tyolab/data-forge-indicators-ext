@@ -44,7 +44,7 @@ describe('ema', () => {
                 22.40]
         });
 
-        const expectedEma = [
+        const expectedEmas = [
             '22.22',
             '22.21',
             '22.24',
@@ -76,14 +76,14 @@ describe('ema', () => {
         expect(sma).to.equal('22.22');
 
         const emaSeries = series.ema_e(10).bake();
-        const emaSeries1 = series.ema(10).bake();
 
         // adding new value
-        series.appendPair([30, 22.17]);
-        const lastEma = '22.92';
+        const newSeries = series.appendPair([30, 22.17]).bake();
+        const newEmaSeries = emaSeries.ema_update(30, 22.17, 10).bake();
+        const lastEma = newEmaSeries.last();
+        const expectedEma = '22.92';
 
-
-        expect(1).to.equal(1);
+        expect(lastEma.toFixed(2)).to.equal(expectedEma);
     });
 
 });

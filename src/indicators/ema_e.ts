@@ -6,12 +6,22 @@ import { OHLC } from './ohlc';
 
 declare module "data-forge/build/lib/series" {
     interface ISeries<IndexT, ValueT> {
-        ema_e(period: number): ISeries<IndexT, number>;
+        ema_e(period: number): ISeries<IndexT, any>;
         ema_update(newIndex: IndexT, newValue: number, period: number): ISeries<IndexT, number>;
     }
 
     interface Series<IndexT, ValueT> {
-        ema_e(period: number): ISeries<IndexT, number>;
+        ema_e(period: number): ISeries<IndexT, any>;
+        ema_update(newIndex: IndexT, newValue: number, period: number): ISeries<IndexT, number>;
+    }
+}
+
+declare module "data-forge/build/lib/dataframe" {
+    interface IDataFrame<IndexT, ValueT> {
+        ema_update(newIndex: IndexT, newValue: number, period: number): ISeries<IndexT, number>;
+    }
+
+    interface DataFrame<IndexT, ValueT> {
         ema_update(newIndex: IndexT, newValue: number, period: number): ISeries<IndexT, number>;
     }
 }
@@ -40,32 +50,56 @@ function computePeriodEma(preValue: number, values: number[], multiplier: number
     return latest;
 }
 
-function ema_e<IndexT = any>(this: ISeries<IndexT, number>, period: number): ISeries<IndexT, number> {
+function ema_e<IndexT = any>(this: ISeries<IndexT, number>, period: number): ISeries<IndexT, any> {
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.ema' to be a number that specifies the time period of the moving average.");
 
     const multiplier = (2 / (period + 1));
     let preValue = this.take(period).average();
     // WhichIndex.Start may be the right side of the series in this sense.
-    let series = this.skip(period - 1);
-    return series.rollingWindow(1)
-        .select((window) => {
-            let emaValue = computePeriodEma(preValue, window.toArray(), multiplier);
-            preValue = emaValue;
-            return emaValue;
-        });
+    let series = this.skip(period);
+    let counter = 0;
+    let newSeries = series.map((window, index) => {
+        let emaValue = computeEma(window, preValue, multiplier);
+        preValue = emaValue;
+        ++counter;
+        return emaValue;
+    });
+    // we should only use this way, as the selector above can be called so many times
+    let pairs = newSeries.toPairs();
+    return new Series({pairs: pairs});
+
+    /**
+     * The following code is for refrencing
+     * As the selector will be called many times whenever iterators are iterated.
+     * So the result won't be accurate, as each round generats different results
+     * and only the first round is correct.
+     */
+    // return this
+    //     .rollingWindow(1) // data-forge has a bug that when rolling window equals one, the first one gets repeated twic
+    //     .select<[IndexT, number]>(window => {
+    //     // .select((row) => {
+    //         let emaValue = computeEma(window.last(), preValue, multiplier);
+    //         // let emaValue = computePeriodEma(preValue, window.toArray(), multiplier);
+    //         preValue = emaValue;
+    //         return [
+    //             window.getIndex().last(),
+    //             emaValue
+    //         ];
+    //     })
+    // .withIndex(function (pair) { return pair[0]; })
+    // .inflate(function (pair) { return pair[1]; });
 }
 
-function ema_update<IndexT = any>(this: Series<IndexT, number>, newIndex: IndexT, newValue: number, period: number): ISeries<IndexT, number> {
+function ema_update<IndexT = any>(this: ISeries<IndexT, number>, newIndex: IndexT, newValue: number, period: number): ISeries<IndexT, number> {
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.ema' to be a number that specifies the time period of the moving average.");
 
     // and we will update the end of course
     const preValue = this.last();
     const multiplier = (2 / (period + 1));
-    const value = computeEma(preValue, newValue, multiplier);
-    this.appendPair([newIndex, value]);
-    return this;
+    const value = computeEma(newValue, preValue, multiplier);
+    return this.appendPair([newIndex, value]);
 }
 
 Series.prototype.ema_update = ema_update;
