@@ -3,6 +3,7 @@ import 'mocha';
 import * as dataForge from 'data-forge';
 import 'data-forge-indicators';
 import { Series } from 'data-forge';
+import { DataFrame } from 'data-forge';
 import { WhichIndex } from 'data-forge/build/lib/series';
 import "../../index";
 import * as path from 'path';
@@ -44,6 +45,8 @@ describe('ema', () => {
                 22.40]
         });
 
+        // let series = df.inflate(v =>)
+
         const expectedEmas = [
             '22.22',
             '22.21',
@@ -82,6 +85,9 @@ describe('ema', () => {
         const newEmaSeries = emaSeries.ema_update(30, 22.17, 10).bake();
         const lastEma = newEmaSeries.last();
         const expectedEma = '22.92';
+
+        const mergedSeries = series.skip(10).merge(newEmaSeries);
+        const zippedSeries = series.skip(10).zip(newEmaSeries);
 
         expect(lastEma.toFixed(2)).to.equal(expectedEma);
     });
