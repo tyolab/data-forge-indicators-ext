@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import { ISeries, Series } from 'data-forge';
 import { IDataFrame, DataFrame } from 'data-forge';
+import { ArrayIterable } from 'data-forge/build/lib/iterables/array-iterable';
 import { OHLC } from './ohlc';
 
 export enum TimeFrame {
@@ -18,35 +19,36 @@ export enum TimeFrame {
 
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
-        compress(period: number): IDataFrame<IndexT, OHLC>;
+        compress(period: number): IDataFrame<IndexT, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
-        compress(period: number): IDataFrame<IndexT, OHLC>;
+        compress(period: number): IDataFrame<IndexT, any>;
     }
 }
 
 /**
- * We don't not use time/date as index as it is not convienent 
+ *
  * Support only day to week and month for now.
  * 
- * And assuming you know what you are doing. we can only compress days to weeks, weeks to months.
+ * And assuming you know what you are doing. we can only compress days to weeks, days to months.
  * 
  * @param this 
  * @param timeframe 
  * @returns 
  */
 function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeFrame): IDataFrame<IndexT, any> {
-    // const lastIndex = this.getIndex().last();
-    // assert.isNumber(lastIndex, "Expected the index for the data frame is a number.");
-    
+    // considering there is a tax return sale on June like in Australia or maybe other places as well, 
+    // the strict canlender month compressing could be a good idea.
+    // it just cost more repeated computation
+
     let rows: any[] = [];
     // compress day data to week
     // it is easy to 
     let maxtrading: number = 0;
     if (timeframe === TimeFrame.Week)
         maxtrading = 7;
-    else if (timeframe === TimeFrame.Month)
+    else if (timeframe === TimeFrame.Month) 
         maxtrading = 31;
 
     // for market normally we use Monday as start sunday (if there is) as end
@@ -99,10 +101,9 @@ function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeF
         row.close = lastday.close;
         rows.push(row);
     }
-    rows = rows;
-    new DataFrame({rows: rows});
 
-   return new DataFrame({rows: rows});
+   let newdf = new DataFrame<IndexT, any>({values: new ArrayIterable(rows)});
+   return newdf;
 }
 
 DataFrame.prototype.compress = compress;

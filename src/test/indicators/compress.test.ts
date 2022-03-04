@@ -28,9 +28,11 @@ describe('compress', () => {
             ;
         
         const df2 = df.compress(TimeFrame.Week);
+        const series2 = df2.getSeries('close');
+
         expect(df2.count()).to.equal(52);
-        
-        const df3 = df2.compress(TimeFrame.Month);
+
+        const df3 = df.compress(TimeFrame.Month);
         expect(df3.count()).to.equal(12);
     });
 
