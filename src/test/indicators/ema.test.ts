@@ -1,7 +1,6 @@
 import { assert, expect } from 'chai';
 import 'mocha';
 import * as dataForge from 'data-forge';
-import 'data-forge-indicators';
 import { Series } from 'data-forge';
 import { DataFrame } from 'data-forge';
 import { WhichIndex } from 'data-forge/build/lib/series';
