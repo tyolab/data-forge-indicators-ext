@@ -2,6 +2,7 @@ import "./indicators/bollinger_e";
 import "./indicators/bollinger-percent-b_e";
 import "./indicators/bollinger-bandwidth_e";
 import "./indicators/ema_e";
+import "./indicators/macd_e";
 import "./indicators/zigzag_pp";
 import "./indicators/atr";
 import "./indicators/rs";
