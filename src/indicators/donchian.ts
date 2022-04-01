@@ -99,5 +99,5 @@ function donchian_channel<IndexT = any> (
     return this;
 };
 
-Series.prototype.donchian_channel = donchian_channel;
+DataFrame.prototype.donchian_channel = donchian_channel;
 DataFrame.prototype.donchian_channel_update = donchian_channel_update;

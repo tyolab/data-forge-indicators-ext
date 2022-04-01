@@ -3,6 +3,7 @@ import { ISeries, Series } from 'data-forge';
 import { IDataFrame, DataFrame } from 'data-forge';
 import { OHLC } from './ohlc';
 
+import { computeATR } from './utils';
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
         atr(period: number): ISeries<IndexT, number>;
@@ -13,14 +14,6 @@ declare module "data-forge/build/lib/dataframe" {
         atr(period: number): ISeries<IndexT, number>;
         atr_update(period: number, key?: string): IDataFrame<IndexT, number>;
     }
-}
-
-function computeATR(day1: any, day2: any): number {
-    const r1 = Math.abs(day2.high - day2.low);
-    const r2 = Math.abs(day2.high - day1.close);
-    const r3 = Math.abs(day2.low - day1.close);
-    const r = Math.max(r1, Math.max(r2, r3));
-    return r;
 }
 
 function atr<IndexT = any>(this: IDataFrame<IndexT, OHLC>, period: number = 14): ISeries<IndexT, number> {
