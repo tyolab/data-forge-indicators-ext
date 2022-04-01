@@ -34,11 +34,21 @@ export interface IMacdEntry {
 
 declare module "data-forge/build/lib/series" {
     interface ISeries<IndexT, ValueT> {
-        macd_e (shortPeriod: number, longPeriod: number, signalPeriod: number): IDataFrame<any, IMacdEntry>;
+        macd_e (shortPeriod: number, longPeriod: number, signalPeriod: number,  update_period: number, key?: string, valueKey?: string): IDataFrame<any, IMacdEntry>;
     }
 
     interface Series<IndexT, ValueT> {
-        macd_e (shortPeriod: number, longPeriod: number, signalPeriod: number): IDataFrame<any, IMacdEntry>;
+        macd_e (shortPeriod: number, longPeriod: number, signalPeriod: number, update_period: number, key?: string, valueKey?: string): IDataFrame<any, IMacdEntry>;
+    }
+}
+
+declare module "data-forge/build/lib/dataframe" {
+    interface IDataFrame<IndexT, ValueT> {
+        macd_e_update (shortPeriod: number, longPeriod: number, signalPeriod: number): IDataFrame<any, IMacdEntry>;
+    }
+
+    interface DataFrame<IndexT, ValueT> {
+        macd_e_update (shortPeriod: number, longPeriod: number, signalPeriod: number): IDataFrame<any, IMacdEntry>;
     }
 }
 
@@ -72,7 +82,7 @@ function macd_e<IndexT = any> (
             let diff = macd - signal;
             return diff;
         }
-        );  
+    );  
 
     let df1 = DataFrame.merge([
         shortEMA.inflate(shortEMA => ({ shortEMA } as any)),

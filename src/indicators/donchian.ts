@@ -24,12 +24,12 @@ export interface IDonchianChannel {
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
         donchian_channel (period: number): IDataFrame<any, IDonchianChannel>;
-        donchian_channel_update (period: number, update_period: number, key: string): IDataFrame<any, any>;
+        donchian_channel_update (period: number, update_period: number, key?: string): IDataFrame<any, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
         donchian_channel (period: number): IDataFrame<any, IDonchianChannel>;
-        donchian_channel_update (period: number, update_period: number, key: string): IDataFrame<any, any>;
+        donchian_channel_update (period: number, update_period: number, key?: string): IDataFrame<any, any>;
     }
 }
 
@@ -78,8 +78,8 @@ function donchian_channel<IndexT = any> (
  function donchian_channel_update<IndexT = any> (
     this: IDataFrame<number, any>, 
     period: number, 
-    update_period: number,
-    key: string
+    update_period: number = 1,
+    key?: string
     ): IDataFrame<number, any> {
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.donchian_channel' to be a number that specifies the time period of the moving average.");

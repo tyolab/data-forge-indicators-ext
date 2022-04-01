@@ -18,11 +18,11 @@ declare module "data-forge/build/lib/series" {
 
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
-        ema_update_df(period: number, key: string, valueKey: string): IDataFrame<IndexT, any>;
+        ema_update_df(period: number, update_period: number, key?: string, valueKey?: string): IDataFrame<IndexT, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
-        ema_update_df(period: number, key: string, valueKey: string): IDataFrame<IndexT, any>;
+        ema_update_df(period: number, update_period: number, key?: string, valueKey?: string): IDataFrame<IndexT, any>;
     }
 }
 
@@ -103,12 +103,15 @@ function ema_update<IndexT = any>(this: ISeries<IndexT, number>, newIndex: Index
     return this.appendPair([newIndex, value]);
 }
 
-function ema_update_df<IndexT = number>(this: IDataFrame<number, any>, period: number, key: string, valueKey: string): IDataFrame<number, any> {
+function ema_update_df<IndexT = number>(this: IDataFrame<number, any>, period: number, update_period: number = 1, key?: string, valueKey?: string): IDataFrame<number, any> {
 
     assert.isNumber(period, "Expected 'period' parameter to 'DataFrame' to be a number that specifies the time period of the moving average.");
 
+    key = key || ('ema' +  period);
+    valueKey = valueKey || 'close';
+
     // and we will update the end of course
-    let pos: number = this.count() - period;
+    let pos: number = this.count() - update_period;
     const lastRow = this.at(pos - 1);
     let preValue = lastRow[key];
 
