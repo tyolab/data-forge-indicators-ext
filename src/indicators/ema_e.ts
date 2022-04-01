@@ -18,16 +18,17 @@ declare module "data-forge/build/lib/series" {
 
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
-        ema_update(newIndex: IndexT, newValue: number, period: number): ISeries<IndexT, number>;
+        ema_update_df(period: number, key: string, valueKey: string): IDataFrame<IndexT, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
-        ema_update(newIndex: IndexT, newValue: number, period: number): ISeries<IndexT, number>;
+        ema_update_df(period: number, key: string, valueKey: string): IDataFrame<IndexT, any>;
     }
 }
 
+//
 // Compute exponent weighted average with previous ema.
-
+//
 function computeEma(newValue: number, preValue: number, multiplier: number): number {
     return (multiplier * newValue) + ((1 - multiplier) * preValue);
 }
@@ -101,6 +102,28 @@ function ema_update<IndexT = any>(this: ISeries<IndexT, number>, newIndex: Index
     const value = computeEma(newValue, preValue, multiplier);
     return this.appendPair([newIndex, value]);
 }
+
+function ema_update_df<IndexT = number>(this: IDataFrame<number, any>, period: number, key: string, valueKey: string): IDataFrame<number, any> {
+
+    assert.isNumber(period, "Expected 'period' parameter to 'DataFrame' to be a number that specifies the time period of the moving average.");
+
+    // and we will update the end of course
+    let pos: number = this.count() - period;
+    const lastRow = this.at(pos - 1);
+    let preValue = lastRow[key];
+
+    for (let i = pos; i < this.count(); ++i) {
+        let row = this.at(i);
+        const multiplier = (2 / (period + 1));
+        let newValue = row[valueKey];
+        const value = computeEma(newValue, preValue, multiplier);
+        row[key] = value;
+        preValue = value;
+    }
+    return this;
+}
+
+DataFrame.prototype.ema_update_df = ema_update_df;
 
 Series.prototype.ema_update = ema_update;
 Series.prototype.ema_e = ema_e;
