@@ -82,13 +82,12 @@ function chandelier_exit<IndexT = any> (
  function chandelier_exit_update<IndexT = any> (
     this: IDataFrame<number, any>, 
     period: number, 
-    update_period: number,
-    key: string,
+    update_period: number = 1,
+    key?: string,
     multiplier: number = 3
     ): IDataFrame<number, any> {
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.chandelier_exit' to be a number that specifies the time period of the moving average.");
-
 
     let pos: number = this.count() - update_period;
     key = key || 'chandelier_exit';

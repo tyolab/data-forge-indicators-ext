@@ -38,7 +38,7 @@ function atr<IndexT = any>(this: IDataFrame<IndexT, OHLC>, period: number = 14):
         .select(pair1 => pair1[1]);
 }
 
-function atr_update<IndexT = number>(this: IDataFrame<number, any>, period: number, key?: string): IDataFrame<number, number> {
+function atr_update<IndexT = number>(this: IDataFrame<number, any>, period: number = 1, key?: string): IDataFrame<number, number> {
     let pos: number = this.count() - period;
     key = key || 'atr';
 

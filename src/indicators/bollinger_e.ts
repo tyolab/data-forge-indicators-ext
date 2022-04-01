@@ -38,11 +38,11 @@ declare module "data-forge/build/lib/series" {
 
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
-        bollinger_e_update (period: number, stdDevMultUpper: number, stdDevMultLower: number, update_period: number, key: string, valueKey: string): IDataFrame<any, any>;
+        bollinger_e_update (period: number, stdDevMultUpper: number, stdDevMultLower: number, update_period: number, key?: string, valueKey?: string): IDataFrame<any, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
-        bollinger_e_update (period: number, stdDevMultUpper: number, stdDevMultLower: number, update_period: number, key: string, valueKey: string): IDataFrame<any, any>;
+        bollinger_e_update (period: number, stdDevMultUpper: number, stdDevMultLower: number, update_period: number, ke?: string, valueKey?: string): IDataFrame<any, any>;
     }
 }
 
@@ -96,9 +96,9 @@ function bollinger_e<IndexT = any> (
     period: number, 
     stdDevMultUpper: number, 
     stdDevMultLower: number,
-    update_period: number,
-    key: string, 
-    valueKey: string
+    update_period: number = 1,
+    key?: string, 
+    valueKey?: string
     ): IDataFrame<number, any> {
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.bollinger' to be a number that specifies the time period of the moving average.");
@@ -107,6 +107,7 @@ function bollinger_e<IndexT = any> (
 
     let pos: number = this.count() - update_period;
     key = key || 'bb';
+    valueKey = valueKey || 'close';
 
     for (let i = pos; i < this.count(); ++i) {
         let last_pos = i - period;

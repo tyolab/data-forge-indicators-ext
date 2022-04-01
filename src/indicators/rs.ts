@@ -41,7 +41,7 @@ function rs<IndexT = any>(this: ISeries<IndexT, number>, comparative: ISeries<In
     if (!comparative) {
         return this;
     }
-    assert.equal(this.count(), comparative.count(), "The two series much contain same number of values");
+    assert.equal(this.count(), comparative.count(), "The two series must contain same number of values");
 
     // as we can do the first day's range
    return this.rollingWindow(length)
@@ -64,7 +64,7 @@ function rs_update<IndexT = number>(this: IDataFrame<number, any>, comparative: 
     if (!comparative) {
         return this;
     }
-    assert.equal(this.count(), comparative.count(), "The two series much contain same number of values");
+    assert.equal(this.count(), comparative.count(), "The two dataframes must contain same number of values");
 
     let pos: number = this.count() - update_period;
     key = key || 'rs';
