@@ -1,3 +1,6 @@
+import "./indicators/donchian";
+import "./indicators/chandelier"
+import "./indicators/compress"
 import "./indicators/bollinger_e";
 import "./indicators/bollinger-percent-b_e";
 import "./indicators/bollinger-bandwidth_e";
