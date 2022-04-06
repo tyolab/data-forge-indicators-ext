@@ -20,10 +20,12 @@ declare module "data-forge/build/lib/series" {
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
         ema_update_df(period: number, update_period: number, key?: string, valueKey?: string): IDataFrame<IndexT, any>;
+        ema_update_df_from(period: number, update_period: number, dataFrame: IDataFrame<IndexT, ValueT>, key?: string, valueKey?: string): IDataFrame<IndexT, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
         ema_update_df(period: number, update_period: number, key?: string, valueKey?: string): IDataFrame<IndexT, any>;
+        ema_update_df_from(period: number, update_period: number, dataFrame: IDataFrame<IndexT, ValueT>, key?: string, valueKey?: string): IDataFrame<IndexT, any>;
     }
 }
 
@@ -79,7 +81,19 @@ function ema_update<IndexT = any>(this: ISeries<IndexT, number>, newIndex: Index
     return this.appendPair([newIndex, value]);
 }
 
-function ema_update_df<IndexT = number>(this: IDataFrame<number, any>, period: number, update_period: number = 1, key?: string, valueKey?: string): IDataFrame<number, any> {
+/**
+ * 
+ * @param this this is the data frame
+ * @param dataFrame 
+ * @param period 
+ * @param update_period 
+ * @param key 
+ * @param valueKey 
+ * @returns 
+ */
+function ema_update_df_from<IndexT = number>(this: IDataFrame<number, any>, period: number, update_period: number = 1, dataFrame: IDataFrame<number, any> = this, key?: string, valueKey?: string): IDataFrame<number, any> {
+
+    assert.isTrue(this.count() <= dataFrame.count(), "Expected 'DataFrame.ema_update_df_from' to be called on a DataFrame that has a smaller number of rows than the source DataFrame.");
 
     assert.isNumber(period, "Expected 'period' parameter to 'DataFrame' to be a number that specifies the time period of the moving average.");
 
@@ -87,28 +101,43 @@ function ema_update_df<IndexT = number>(this: IDataFrame<number, any>, period: n
     valueKey = valueKey || 'close';
 
     // and we will update the end of course
-    let pos: number = this.count() - update_period;
-    const lastRow = this.at(pos - 1); 
+    let newDataFrame = this;
+    let pos: number = dataFrame.count() - update_period;
+    const lastRow = newDataFrame.at(pos - 1); 
     
     assert.isDefined(lastRow[key], "Expected 'DataFrame.ema_update_df' to be called on a DataFrame that has a '" + key + "' column.");
 
     let preValue = lastRow[key];
 
-    for (let i = pos; i < this.count(); ++i) {
-        let row = this.at(i);
+    for (let i = pos; i < dataFrame.count(); ++i) {
+        let valueRow = dataFrame.at(i);
+        let row = newDataFrame.at(i);
         const multiplier = (2 / (period + 1));
 
-        assert.isDefined(row[valueKey], "Expected 'DataFrame.ema_update_df' to be called on a DataFrame that has a '" + valueKey + "' column.");
+        assert.isDefined(valueRow[valueKey], "Expected 'DataFrame.ema_update_df' to be called on a DataFrame that has a '" + valueKey + "' column.");
 
-        let newValue = row[valueKey];
+        let newValue = valueRow[valueKey];
         const value = computeEma(newValue, preValue, multiplier);
-        row[key] = value;
+
+        if (this.count() == dataFrame.count())
+            row[key] = value;
+        else {
+            var newRow: any = {};
+            newRow[key] = value;
+            newDataFrame = newDataFrame.appendPair([i, newRow]);
+        }
+
         preValue = value;
     }
-    return this;
+    return newDataFrame;
+}
+
+function ema_update_df<IndexT = number>(this: IDataFrame<number, any>, period: number, update_period: number = 1, key?: string, valueKey?: string): IDataFrame<number, any> {
+    return ema_update_df_from.call(this, period, update_period, this, key, valueKey);
 }
 
 DataFrame.prototype.ema_update_df = ema_update_df;
+DataFrame.prototype.ema_update_df_from = ema_update_df_from;
 
 Series.prototype.ema_update = ema_update;
 Series.prototype.ema_e = ema_e;
