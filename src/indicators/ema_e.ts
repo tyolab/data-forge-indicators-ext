@@ -2,7 +2,8 @@ import { assert } from 'chai';
 import { ISeries, Series } from 'data-forge';
 import { IDataFrame, DataFrame } from 'data-forge';
 import { WhichIndex } from 'data-forge/build/lib/series';
-import { OHLC } from './ohlc';
+
+import { computeEma, computePeriodEma } from './utils';
 
 declare module "data-forge/build/lib/series" {
     interface ISeries<IndexT, ValueT> {
@@ -24,31 +25,6 @@ declare module "data-forge/build/lib/dataframe" {
     interface DataFrame<IndexT, ValueT> {
         ema_update_df(period: number, update_period: number, key?: string, valueKey?: string): IDataFrame<IndexT, any>;
     }
-}
-
-//
-// Compute exponent weighted average with previous ema.
-//
-function computeEma(newValue: number, preValue: number, multiplier: number): number {
-    return (multiplier * newValue) + ((1 - multiplier) * preValue);
-}
-
-
-//
-// Compute exponent weighted average for a bunch of numbers.
-//
-function computePeriodEma(preValue: number, values: number[], multiplier: number): number {
-    
-    if (values.length === 0) {
-        return 0;
-    }
-
-    let latest = preValue;
-    for (let i = 0; i < values.length; ++i) {
-        latest = computeEma(values[i], latest, multiplier);
-    }
-
-    return latest;
 }
 
 function ema_e<IndexT = any>(this: ISeries<IndexT, number>, period: number): ISeries<IndexT, any> {
@@ -107,17 +83,23 @@ function ema_update_df<IndexT = number>(this: IDataFrame<number, any>, period: n
 
     assert.isNumber(period, "Expected 'period' parameter to 'DataFrame' to be a number that specifies the time period of the moving average.");
 
-    key = key || ('ema' +  period);
+    key = key || 'ema';
     valueKey = valueKey || 'close';
 
     // and we will update the end of course
     let pos: number = this.count() - update_period;
-    const lastRow = this.at(pos - 1);
+    const lastRow = this.at(pos - 1); 
+    
+    assert.isDefined(lastRow[key], "Expected 'DataFrame.ema_update_df' to be called on a DataFrame that has a '" + key + "' column.");
+
     let preValue = lastRow[key];
 
     for (let i = pos; i < this.count(); ++i) {
         let row = this.at(i);
         const multiplier = (2 / (period + 1));
+
+        assert.isDefined(row[valueKey], "Expected 'DataFrame.ema_update_df' to be called on a DataFrame that has a '" + valueKey + "' column.");
+
         let newValue = row[valueKey];
         const value = computeEma(newValue, preValue, multiplier);
         row[key] = value;

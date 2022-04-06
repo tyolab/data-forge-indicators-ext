@@ -126,11 +126,18 @@ describe('ema', () => {
         const emarow = emaSeries.at(11);
         expect(emarow.toFixed(2)).to.equal('22.21');
 
+        const expectedEma = '22.92'; 
+
+        let newDataFrame = newdf.withSeries('ema', emaSeries).appendPair([30, {pos: 30, value: 22.17}]);
+        newDataFrame = newDataFrame.resetIndex().ema_update_df(10, 1, "ema", "value");
+        let newEma = newDataFrame.getSeries('ema').at(newDataFrame.count() - 1).toFixed(2);
+        expect(newEma).to.equal(expectedEma);
+
         // adding new value
         const newSeries = series.appendPair([30, 22.17]).bake();
         const newEmaSeries = emaSeries.ema_update(30, 22.17, 10).bake();
         const lastEma = newEmaSeries.last();
-        const expectedEma = '22.92'; expect(lastEma.toFixed(2)).to.equal(expectedEma);
+        expect(lastEma.toFixed(2)).to.equal(expectedEma);
 
         // const mergedSeries = series.skip(10).merge(newEmaSeries);
         // const zippedSeries = series.skip(10).zip(newEmaSeries);

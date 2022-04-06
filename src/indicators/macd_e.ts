@@ -30,25 +30,40 @@ export interface IMacdEntry {
      * Difference between the macd and the signal line.
      */
     histogram?: number;
+
+    /**
+     * Short Period.
+     */
+    shortPeriod?: number;
+
+    /**
+     * Long Period.
+     */
+     longPeriod?: number;
+
+    /**
+     * Signal Period.
+     */
+    signalPeriod?: number;
 }
 
 declare module "data-forge/build/lib/series" {
     interface ISeries<IndexT, ValueT> {
-        macd_e (shortPeriod: number, longPeriod: number, signalPeriod: number,  update_period: number, key?: string, valueKey?: string): IDataFrame<any, IMacdEntry>;
+        macd_e (shortPeriod: number, longPeriod: number, signalPeriod: number): IDataFrame<any, IMacdEntry>;
     }
 
     interface Series<IndexT, ValueT> {
-        macd_e (shortPeriod: number, longPeriod: number, signalPeriod: number, update_period: number, key?: string, valueKey?: string): IDataFrame<any, IMacdEntry>;
+        macd_e (shortPeriod: number, longPeriod: number, signalPeriod: number): IDataFrame<any, IMacdEntry>;
     }
 }
 
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
-        macd_e_update (shortPeriod: number, longPeriod: number, signalPeriod: number): IDataFrame<any, IMacdEntry>;
+        macd_e_update (shortPeriod: number, longPeriod: number, signalPeriod: number, update_period: number, key?: string, valueKey?: string): IDataFrame<any, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
-        macd_e_update (shortPeriod: number, longPeriod: number, signalPeriod: number): IDataFrame<any, IMacdEntry>;
+        macd_e_update (shortPeriod: number, longPeriod: number, signalPeriod: number, update_period: number, key?: string, valueKey?: string): IDataFrame<any, any>;
     }
 }
 
@@ -91,37 +106,42 @@ function macd_e<IndexT = any> (
     return df1.withSeries('macd', macd)
         .withSeries('signal', signal)
         .withSeries('histogram', histogram);
-
-    // return df1.merge([
-    //     shortEMA.inflate(shortEMA => ({ shortEMA } as any)),
-    //     longEMA.inflate(longEMA => ({ longEMA } as any)),
-    //     macd.inflate(macd => ({ macd } as any)),
-    //     signal.inflate(signal => ({ signal } as any)),
-    //     histogram.inflate(histogram => ({ histogram } as any))
-    // ]);
-
-    /*TODO: potential short hand syntax.
-    return DataFrame.merge({
-        shortEMA,
-        longEMA,
-        macd,
-        signal,
-        histogram
-    });
-    */
-
-    /*TODO: this almost works but doesn't line up the index!
-    return new DataFrame({ //todo: need to merge on index!
-        index: this.getIndex(),
-        columns: {
-            shortEMA,
-            longEMA,
-            macd,
-            signal,
-            histogram,
-        },
-    });
-    */
 };
+
+/**
+ * @todo
+ */
+// function macd_e_update<IndexT = any> (
+//     this: IDataFrame<number, number>, 
+//     shortPeriod: number,
+//     longPeriod: number,
+//     signalPeriod: number, 
+//     update_period: number, 
+//     key?: string, 
+//     valueKey?: string
+//     ): IDataFrame<number, any> {
+
+//     assert.isNumber(shortPeriod, "Expected 'shortPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the short moving average.");
+//     assert.isNumber(longPeriod, "Expected 'longPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the long moving average.");
+//     assert.isNumber(signalPeriod, "Expected 'signalPeriod' parameter to 'Series.macd' to be a number that specifies the time period for the macd signal line.");
+
+//     key = key || 'macd';
+//     valueKey = valueKey || 'close';
+
+//     // and we will update the end of course
+//     let pos: number = this.count() - update_period;
+//     const lastRow = this.at(pos - 1);
+
+//     for (let i = pos; i < this.count(); ++i) {
+//         let row = this.at(i);
+  
+//         let short_ema = 
+
+//         // const value = computeEma(newValue, preValue, multiplier);
+
+//     }
+//     return this;
+
+// };
 
 Series.prototype.macd_e = macd_e;
