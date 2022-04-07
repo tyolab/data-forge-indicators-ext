@@ -1,6 +1,6 @@
 {
     "name": "data-forge-indicators-ext",
-    "version": "0.0.19",
+    "version": "0.0.21",
     "description": "An extension for Data-Forge-Indicators.",
     "main": "build/index.js",
     "types": "build/index.d.ts",

@@ -95,6 +95,8 @@ function ema_update_df_from<IndexT = number>(this: IDataFrame<number, any>, peri
 
     assert.isTrue(this.count() <= dataFrame.count(), "Expected 'DataFrame.ema_update_df_from' to be called on a DataFrame that has a smaller number of rows than the source DataFrame.");
 
+    assert.isTrue(this.count() > 0, "Expected 'DataFrame.ema_update_df_from' to be called on a DataFrame that has at least one row.");
+
     assert.isNumber(period, "Expected 'period' parameter to 'DataFrame' to be a number that specifies the time period of the moving average.");
 
     key = key || 'ema';
@@ -102,8 +104,8 @@ function ema_update_df_from<IndexT = number>(this: IDataFrame<number, any>, peri
 
     // and we will update the end of course
     let newDataFrame = this;
-    let pos: number = dataFrame.count() - update_period;
-    const lastRow = newDataFrame.at(pos - 1); 
+    let pos: number = this.count() == dataFrame.count() ? (dataFrame.count() - update_period) : (update_period > this.count() ? 1 : dataFrame.count() - update_period);
+    let lastRow: any = newDataFrame.at(pos - 1); 
     
     assert.isDefined(lastRow[key], "Expected 'DataFrame.ema_update_df' to be called on a DataFrame that has a '" + key + "' column.");
 
