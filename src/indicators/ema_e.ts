@@ -92,8 +92,16 @@ function ema_update<IndexT = any>(this: ISeries<IndexT, number>, newIndex: Index
  * @returns 
  */
 function ema_update_df_from<IndexT = number>(this: IDataFrame<number, any>, period: number, update_period: number = 1, dataFrame: IDataFrame<number, any> = this, key?: string, valueKey?: string): IDataFrame<number, any> {
+    var thisCount = this.count();
+    var dataCount = dataFrame.count();
 
-    assert.isTrue(this.count() <= dataFrame.count(), "Expected 'DataFrame.ema_update_df_from' to be called on a DataFrame that has a smaller number of rows than the source DataFrame.");
+    /**
+     * There isn't enough data to calculate the EMA
+     */
+    if (dataCount < (period + 1))
+        return this;
+
+    // assert.isTrue(this.count() <= dataFrame.count(), "Expected 'DataFrame.ema_update_df_from' to be called on a DataFrame that has a smaller number of rows than the source DataFrame.");
 
     assert.isTrue(this.count() > 0, "Expected 'DataFrame.ema_update_df_from' to be called on a DataFrame that has at least one row.");
 
@@ -104,25 +112,32 @@ function ema_update_df_from<IndexT = number>(this: IDataFrame<number, any>, peri
 
     // and we will update the end of course
     let newDataFrame = this;
-    let pos: number = this.count() == dataFrame.count() ? (dataFrame.count() - update_period) : (update_period > this.count() ? 1 : dataFrame.count() - update_period);
-    let lastRow: any = newDataFrame.at(pos - 1); 
-    
-    // assert.isDefined(lastRow[key], "Expected 'DataFrame.ema_update_df' to be called on a DataFrame that has a '" + key + "' column.");
-    while (lastRow[key] === undefined && pos < newDataFrame.count()) {
+    var pos = update_period > dataCount ? 1 : dataCount - update_period;
+    --pos;
+    if (pos < period)
+        pos = period;
+    var lastRow = undefined;
+    if (pos < thisCount) {
         lastRow = newDataFrame.at(pos);
-        if (pos >= (period)) {
-            var tempDataFrame = dataFrame.between(pos - period, pos - 1);
-            var sma = tempDataFrame.getSeries(valueKey).average();
-            lastRow[key] = sma;
+        while (lastRow && lastRow[key] === undefined) {
+            if (pos >= (period)) {
+                var tempDataFrame = dataFrame.between(pos - period, pos - 1);
+                var sma = tempDataFrame.getSeries(valueKey).average();
+                lastRow[key] = sma;
+                break;
+            }
+            
             ++pos;
-            break;
+            if (pos >= newDataFrame.count())
+                break;
+            lastRow = newDataFrame.at(pos);
         }
-        
-        ++pos;
     }
+    if (lastRow === undefined)
+        return this;
 
-    let preValue = lastRow[key];
-
+    var preValue = lastRow[key];
+    ++pos;
     for (let i = pos; i < dataFrame.count(); ++i) {
         let valueRow = dataFrame.at(i);
         let row = newDataFrame.at(i);
@@ -133,11 +148,12 @@ function ema_update_df_from<IndexT = number>(this: IDataFrame<number, any>, peri
         let newValue = valueRow[valueKey];
         const value = computeEma(newValue, preValue, multiplier);
 
-        if (this.count() == dataFrame.count())
+        if (i < thisCount)
             row[key] = value;
         else {
             var newRow: any = {};
             newRow[key] = value;
+            newRow[valueKey] = newValue;
             newDataFrame = newDataFrame.appendPair([i, newRow]);
         }
 
