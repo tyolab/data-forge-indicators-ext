@@ -107,7 +107,19 @@ function ema_update_df_from<IndexT = number>(this: IDataFrame<number, any>, peri
     let pos: number = this.count() == dataFrame.count() ? (dataFrame.count() - update_period) : (update_period > this.count() ? 1 : dataFrame.count() - update_period);
     let lastRow: any = newDataFrame.at(pos - 1); 
     
-    assert.isDefined(lastRow[key], "Expected 'DataFrame.ema_update_df' to be called on a DataFrame that has a '" + key + "' column.");
+    // assert.isDefined(lastRow[key], "Expected 'DataFrame.ema_update_df' to be called on a DataFrame that has a '" + key + "' column.");
+    while (lastRow[key] === undefined && pos < newDataFrame.count()) {
+        lastRow = newDataFrame.at(pos);
+        if (pos >= (period)) {
+            var tempDataFrame = dataFrame.between(pos - period, pos - 1);
+            var sma = tempDataFrame.getSeries(valueKey).average();
+            lastRow[key] = sma;
+            ++pos;
+            break;
+        }
+        
+        ++pos;
+    }
 
     let preValue = lastRow[key];
 
