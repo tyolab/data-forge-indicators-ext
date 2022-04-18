@@ -1,3 +1,6 @@
+import * as dataForge from 'data-forge';
+import 'data-forge-fs';
+
 export let data = [
     [1, 22.27],
     [2, 22.19],
@@ -82,3 +85,21 @@ export let data2 = [
     [48, 22.60],
     [49, 22.60],
 ];
+
+function parseThisFloat(v: string): number {
+    return parseFloat(v.replaceAll(',', ''));
+}
+
+let this_dataframe = dataForge.readFileSync(__dirname + "/gold.csv")
+.parseCSV();
+
+export let gold_dataframe = this_dataframe.renameSeries({'Date': 'date'})
+// .renameSeries({'Price': 'close'})
+// .renameSeries({'High': 'high'})
+// .renameSeries({'Open': 'open'})
+// .renameSeries({'Low': 'low'})
+.withSeries('open', this_dataframe.deflate(day => parseThisFloat(day.Open)))
+.withSeries('high', this_dataframe.deflate(day => parseThisFloat(day.High)))
+.withSeries('close', this_dataframe.deflate(day => parseThisFloat(day.Price)))
+.withSeries('low', this_dataframe.deflate(day => parseThisFloat(day.Low)))
+.dropSeries(['Open', 'High', 'Price', 'Low']);
