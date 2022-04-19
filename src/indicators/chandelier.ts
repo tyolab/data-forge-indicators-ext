@@ -60,7 +60,7 @@ function computeChandelierExit<IndexT>(window: IDataFrame<IndexT, any>, multipli
 
 function chandelier_exit<IndexT = any> (
     this: IDataFrame<IndexT, any>, 
-    period: number = 22,
+    period: number = 20,
     multiplier: number = 3
     ): ISeries<IndexT, IChandelierExit> {
 

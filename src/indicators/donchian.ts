@@ -57,7 +57,7 @@ function computeDonchianChannel<IndexT = any>(window: IDataFrame<IndexT, number>
  */
 function donchian_channel<IndexT = any> (
     this: IDataFrame<IndexT, number>, 
-    period: number
+    period: number = 20
     ): IDataFrame<IndexT, IDonchianChannel> {
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.donchian_channel' to be a number that specifies the time period of the moving average.");
