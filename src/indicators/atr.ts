@@ -15,6 +15,11 @@ export interface IAtr {
      * The Standard Deviation of the ATR.
      */
     std: number;
+
+    /**
+     * The percentage of change
+     */
+    p: number;
 }
 
 declare module "data-forge/build/lib/dataframe" {
@@ -42,13 +47,19 @@ function atr<IndexT = any>(this: IDataFrame<IndexT, OHLC>, period: number = 14):
                 return computeATR(day1, day2);
             });
 
+            let avg = ranges.average();
+            let idx = window1.getIndex().last();
+            let last_bar = window1.last(); // window1.at(idx); 
+            let p: number = last_bar.close > last_bar.open ? avg / last_bar.low : avg / last_bar.high; 
+
             let atr_v: IAtr = {
-                avg: ranges.average(),
-                std: ranges.std()
+                avg: avg,
+                std: ranges.std(),
+                p: p
             }   
 
             return [
-                window1.getIndex().last(),
+                idx,
                 atr_v
             ];
         })
