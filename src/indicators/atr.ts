@@ -50,6 +50,16 @@ function atr<IndexT = any>(this: IDataFrame<IndexT, OHLC>, period: number = 14):
             let avg = ranges.average();
             let idx = window1.getIndex().last();
             let last_bar = window1.last(); // window1.at(idx); 
+
+            /**
+            * volatility correlates directly with the profitility 
+            * 
+            * the percentage of change 
+            * measure the volatility 
+            * 
+            * if green, atr / low
+            * if red, atr / high
+            */
             let p: number = last_bar.close > last_bar.open ? avg / last_bar.low : avg / last_bar.high; 
 
             let atr_v: IAtr = {
