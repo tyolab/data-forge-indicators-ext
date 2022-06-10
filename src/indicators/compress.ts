@@ -8,6 +8,7 @@ export enum TimeFrame {
     Minutes_1 = 1, // "1m",
     Minutes_2 = 2, // "2m",
     Minutes_3 = 3, // "3m",
+    Minutes_5 = 5, // "5m",
     Minutes_15 = 15,  //  "15m",
     Minutes_30 = 30, // "30m",
     Hours_1 = 60, // "1h",
@@ -87,6 +88,8 @@ function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeF
 
         if (row === undefined)
             row = {time: value.time, open: value.open, high: value.high, low: value.low, close: value.close} as OHLC;
+        else
+            row.time = value.time;
 
         if (value.high > row.high)
             row.high = value.high;

@@ -3,24 +3,45 @@ import { IBollingerBand } from "./bollinger_e";
 
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
-        bandwidth(): ISeries<IndexT, number>;
+        bandwidth_e(): ISeries<IndexT, number>;
+        bandwidth_p(): ISeries<IndexT, number>;
     }
 
     interface DataFrame<IndexT, ValueT> {
-        bandwidth(): ISeries<IndexT, number>;
+        bandwidth_e(): ISeries<IndexT, number>;
+        bandwidth_p(): ISeries<IndexT, number>;
     }
 }
 
 /**
  * Compute the bandwidth indicator from Bollinger Bands.
  * 
- * Bandwidth tells how wide the Bollinger Bands are on a normalized basis.
- * 
- * https://en.wikipedia.org/wiki/Bollinger_Bands#Indicators_derived_from_Bollinger_Bands
  *
  */
-function bandwidth<IndexT = any>(this: IDataFrame<IndexT, IBollingerBand>): ISeries<IndexT, number> {
-    return this.deflate(band => (band.upper - band.lower) / (band.middle));
+function bandwidth_p<IndexT = any>(this: IDataFrame<IndexT, any>): ISeries<IndexT, number> {
+    return this.deflate(
+        (bb) => {
+            let band = bb.bollinger || bb.bb || bb;
+            return (band.upper - band.lower) / (band.middle);
+        }
+        );
 };
 
-DataFrame.prototype.bandwidth = bandwidth;
+/**
+ * 
+ * Really just the bandwidth without normalization.
+ * 
+ * @param this 
+ * @returns 
+ */
+function bandwidth_e<IndexT = any>(this: IDataFrame<IndexT, any>): ISeries<IndexT, number> {
+    return this.deflate(
+        (bb) => {
+            let band = bb.bollinger || bb.bb || bb;
+            return (band.upper - band.lower);
+        }
+        );
+};
+
+DataFrame.prototype.bandwidth_p = bandwidth_p;
+DataFrame.prototype.bandwidth_e = bandwidth_e;
