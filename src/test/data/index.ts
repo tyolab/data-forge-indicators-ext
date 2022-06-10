@@ -90,16 +90,23 @@ function parseThisFloat(v: string): number {
     return parseFloat(v.replaceAll(',', ''));
 }
 
-let this_dataframe = dataForge.readFileSync(__dirname + "/gold.csv")
+let dataframe = dataForge.readFileSync(__dirname + "/gold.csv")
 .parseCSV();
 
-export let gold_dataframe = this_dataframe.renameSeries({'Date': 'date'})
+let this_dataframe = dataframe
+.renameSeries({'"Date"': 'time'})
 // .renameSeries({'Price': 'close'})
 // .renameSeries({'High': 'high'})
 // .renameSeries({'Open': 'open'})
 // .renameSeries({'Low': 'low'})
-.withSeries('open', this_dataframe.deflate(day => parseThisFloat(day.Open)))
-.withSeries('high', this_dataframe.deflate(day => parseThisFloat(day.High)))
-.withSeries('close', this_dataframe.deflate(day => parseThisFloat(day.Price)))
-.withSeries('low', this_dataframe.deflate(day => parseThisFloat(day.Low)))
-.dropSeries(['Open', 'High', 'Price', 'Low']);
+.withSeries('open', dataframe.deflate(day => parseThisFloat(day.Open)))
+.withSeries('high', dataframe.deflate(day => parseThisFloat(day.High)))
+.withSeries('close', dataframe.deflate(day => parseThisFloat(day.Price)))
+.withSeries('low', dataframe.deflate(day => parseThisFloat(day.Low)))
+.dropSeries(['Open', 'High', 'Price', 'Low'])
+.parseDates('time');
+
+let data_array = this_dataframe.toArray().sort((b1: any, b2: any) => {
+    return b1.time.getTime() - b2.time.getTime();
+});
+export let gold_dataframe = new dataForge.DataFrame(data_array);

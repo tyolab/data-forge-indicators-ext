@@ -3,11 +3,11 @@ import { IBollingerBand } from './bollinger_e';
 
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
-        percentB(): ISeries<IndexT, number>;
+        percent_b(): ISeries<IndexT, number>;
     }
 
     interface DataFrame<IndexT, ValueT> {
-        percentB(): ISeries<IndexT, number>;
+        percent_b(): ISeries<IndexT, number>;
     }
 }
 
@@ -20,8 +20,12 @@ declare module "data-forge/build/lib/dataframe" {
  * https://en.wikipedia.org/wiki/Bollinger_Bands#Indicators_derived_from_Bollinger_Bands
  *
  */
-function percentB<IndexT = any>(this: IDataFrame<IndexT, IBollingerBand>): ISeries<IndexT, number> {
-    return this.deflate(band => (band.value - band.lower) / (band.upper - band.lower));
+function percent_b<IndexT = any>(this: IDataFrame<IndexT, any>): ISeries<IndexT, number> {
+    return this.deflate(
+        (bb) => { 
+            let band = bb.bollinger || bb.bb || bb;
+            return (band.value - band.lower) / (band.upper - band.lower)
+        });
 };
 
-DataFrame.prototype.percentB = percentB;
+DataFrame.prototype.percent_b = percent_b;
