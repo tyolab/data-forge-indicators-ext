@@ -17,9 +17,14 @@ export interface IAtr {
     std: number;
 
     /**
-     * The percentage of change
+     * The percentage of change, Normalized ATR.
      */
     p: number;
+
+    /**
+     * The percentage of change, Normalized ATR.
+     */
+    normalized: number;    
 }
 
 declare module "data-forge/build/lib/dataframe" {
@@ -65,7 +70,8 @@ function atr<IndexT = any>(this: IDataFrame<IndexT, OHLC>, period: number = 14):
             let atr_v: IAtr = {
                 avg: avg,
                 std: ranges.std(),
-                p: p
+                p: p,
+                normalized: avg / last_bar.close
             }   
 
             return [
