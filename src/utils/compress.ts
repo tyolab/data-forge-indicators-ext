@@ -5,27 +5,45 @@ import { ArrayIterable } from 'data-forge/build/lib/iterables/array-iterable';
 import { OHLC } from './ohlc';
 
 export enum TimeFrame {
-    Minutes_1 = 1, // "1m",
-    Minutes_2 = 2, // "2m",
-    Minutes_3 = 3, // "3m",
-    Minutes_5 = 5, // "5m",
-    Minutes_15 = 15,  //  "15m",
-    Minutes_30 = 30, // "30m",
-    Hours_1 = 60, // "1h",
-    Hours_4 = 240, // "4h",
-    Day =  1440, // "day",
-    Week = 10080, // "week",
-    Month = 43800, // "month"
+    Tick = 0,               // "tick",
+    Minutes_1 = 1,          // "1m",
+    Minutes_2 = 2,          // "2m",
+    Minutes_3 = 3,          // "3m",
+    Minutes_5 = 5,          // "5m",
+    Minutes_15 = 15,        //  "15m",
+    Minutes_30 = 30,        // "30m",
+    Hours_1 = 60,           // "1h",
+    Hours_4 = 240,          // "4h",
+    Day =  1440,            // "day",
+    Week = 10080,           // "week",
+    Month = 43800,          // "month"
 }
 
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
-        compress(period: number): IDataFrame<IndexT, any>;
+        tickToMinutes(timeframe: TimeFrame): IDataFrame<IndexT, any>;
+        compressMinutes(timeframe: TimeFrame): IDataFrame<IndexT, any>;
+        compress(timeframe: TimeFrame): IDataFrame<IndexT, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
-        compress(period: number): IDataFrame<IndexT, any>;
+        tickToMinutes(timeframe: TimeFrame): IDataFrame<IndexT, any>;
+        compressMinutes(timeframe: TimeFrame): IDataFrame<IndexT, any>;
+        compress(timeframe: TimeFrame): IDataFrame<IndexT, any>;
     }
+}
+
+/**
+ * Turn the tick data into minutes data.
+ * The tick data contains an extra column for the time.
+ * 
+ * @param this 
+ * @param timeframe 
+ */
+function tickToMinutes<IndexT = any>(this: IDataFrame<IndexT, any>, timeframe: TimeFrame): IDataFrame<IndexT, any> {
+}
+
+function compressMinutes<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeFrame): IDataFrame<IndexT, any> {
 }
 
 /**
@@ -40,8 +58,8 @@ declare module "data-forge/build/lib/dataframe" {
  */
 function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeFrame): IDataFrame<IndexT, any> {
     // considering there is a tax return sale on June like in Australia or maybe other places as well, 
-    // the strict canlender month compressing could be a good idea.
-    // it just cost more repeated computation
+    // so the strict canlender month compressing could be a good idea;
+    // also it would be more accurate to reflect the market movement
 
     let rows: any[] = [];
     // compress day data to week
@@ -52,7 +70,8 @@ function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeF
     else if (timeframe === TimeFrame.Month) 
         maxtrading = 31;
 
-    // for market normally we use Monday as start sunday (if there is) as end
+    // for market normally we use Monday as the start of the week
+    // and Sunday (if there is) as the end
     // we can't use Series.window function for it
     let row: any = undefined;
     const df = this;
@@ -108,5 +127,6 @@ function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeF
    let newdf = new DataFrame<IndexT, any>({values: new ArrayIterable(rows)});
    return newdf;
 }
-
+DataFrame.prototype.tickToMinutes = tickToMinutes;
+DataFrame.prototype.compressMinutes = compressMinutes;
 DataFrame.prototype.compress = compress;
