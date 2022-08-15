@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import { ISeries, Series } from 'data-forge';
 import { IDataFrame, DataFrame } from 'data-forge';
 import { ArrayIterable } from 'data-forge/build/lib/iterables/array-iterable';
-import { OHLC } from './ohlc';
+import { OHLC } from '../indicators/ohlc';
 
 export enum TimeFrame {
     Tick = 0,               // "tick",
@@ -41,9 +41,11 @@ declare module "data-forge/build/lib/dataframe" {
  * @param timeframe 
  */
 function tickToMinutes<IndexT = any>(this: IDataFrame<IndexT, any>, timeframe: TimeFrame): IDataFrame<IndexT, any> {
+    return this;
 }
 
 function compressMinutes<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeFrame): IDataFrame<IndexT, any> {
+    return this;
 }
 
 /**

@@ -1,5 +1,6 @@
-import * as dataForge from 'data-forge';
+import * as dataForge from 'data-forge'
 import 'data-forge-fs';
+import * as dataForgeFs from '../../utils/fs';
 
 export let data = [
     [1, 22.27],
@@ -111,17 +112,18 @@ let data_array = this_dataframe.toArray().sort((b1: any, b2: any) => {
 });
 export let gold_dataframe = new dataForge.DataFrame(data_array);
 
-export let load_gold_ticks_data = () => {
-    let dataframe = dataForge.readFileSync(__dirname + "/gold.csv")
-.parseCSV();
+export let load_gold_ticks_data = async () => {
+    let dataframe = await dataForgeFs.readGzipFile(__dirname + "/gold-ticks.txt.gz")
+    .parseTicksData({columnNames: ['symbol', "time", "open", "high", "low", "close", "volume"]}); 
 
     let this_dataframe = dataframe
-    .renameSeries({'"Date"': 'time'})
-    .withSeries('open', dataframe.deflate(day => parseThisFloat(day.Open)))
-    .withSeries('high', dataframe.deflate(day => parseThisFloat(day.High)))
-    .withSeries('close', dataframe.deflate(day => parseThisFloat(day.Price)))
-    .withSeries('low', dataframe.deflate(day => parseThisFloat(day.Low)))
-    .dropSeries(['Open', 'High', 'Price', 'Low'])
-    .parseDates('time');
+    // .renameSeries({'"Date"': 'time'})
+    // .withSeries('open', dataframe.deflate(day => parseThisFloat(day.Open)))
+    // .withSeries('high', dataframe.deflate(day => parseThisFloat(day.High)))
+    // .withSeries('close', dataframe.deflate(day => parseThisFloat(day.Price)))
+    // .withSeries('low', dataframe.deflate(day => parseThisFloat(day.Low)))
+    // .dropSeries(['Open', 'High', 'Price', 'Low'])
+    // .parseDates('time')
+    ;
     return this_dataframe;
 }

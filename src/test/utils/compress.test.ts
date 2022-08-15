@@ -1,16 +1,11 @@
 import { assert, expect } from 'chai';
 import 'mocha';
-import * as dataForge from 'data-forge';
 import 'data-forge-fs';
-import { Series } from 'data-forge';
-import { DataFrame } from 'data-forge';
-
 import "../../index";
 import * as path from 'path';
 
 import { gold_dataframe } from '../data';
-import { readJSON, writeJSON } from './test-utils';
-import { TimeFrame } from '../../indicators/compress';
+import { TimeFrame } from '../../utils/compress';
 
 describe('compress', () => {
 
