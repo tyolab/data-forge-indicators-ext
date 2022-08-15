@@ -110,3 +110,18 @@ let data_array = this_dataframe.toArray().sort((b1: any, b2: any) => {
     return b1.time.getTime() - b2.time.getTime();
 });
 export let gold_dataframe = new dataForge.DataFrame(data_array);
+
+export let load_gold_ticks_data = () => {
+    let dataframe = dataForge.readFileSync(__dirname + "/gold.csv")
+.parseCSV();
+
+    let this_dataframe = dataframe
+    .renameSeries({'"Date"': 'time'})
+    .withSeries('open', dataframe.deflate(day => parseThisFloat(day.Open)))
+    .withSeries('high', dataframe.deflate(day => parseThisFloat(day.High)))
+    .withSeries('close', dataframe.deflate(day => parseThisFloat(day.Price)))
+    .withSeries('low', dataframe.deflate(day => parseThisFloat(day.Low)))
+    .dropSeries(['Open', 'High', 'Price', 'Low'])
+    .parseDates('time');
+    return this_dataframe;
+}

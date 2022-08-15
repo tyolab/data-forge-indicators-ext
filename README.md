@@ -2,7 +2,7 @@
 
 This is for the extension of [data forge indicators](https://data-forge.github.io/data-forge-indicators/).
 
-## OHLC
+## OHLC Data
 basically we follow the data format as in the following:
 ```json
 {
@@ -16,6 +16,9 @@ basically we follow the data format as in the following:
 ```
 
 Please note, in the OHLC data object, the date is a string type using the "YYYYMMDD" format, and the time is a "Date" type.
+
+## Test Data
+Sample gold data (2021) is included for testing.
 
 ## Maintainer
 
