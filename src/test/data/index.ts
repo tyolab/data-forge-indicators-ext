@@ -88,7 +88,7 @@ export let data2 = [
 ];
 
 function parseThisFloat(v: string): number {
-    return parseFloat(v.replaceAll(',', ''));
+    return parseFloat(v.replace(/,/g, ''));
 }
 
 let dataframe = dataForge.readFileSync(__dirname + "/gold.csv")
@@ -112,18 +112,29 @@ let data_array = this_dataframe.toArray().sort((b1: any, b2: any) => {
 });
 export let gold_dataframe = new dataForge.DataFrame(data_array);
 
+/**
+ * There is many way of presenting the tick data
+ * The free tick data you can download can have different format
+ * 
+ * For example, the best tick data will have:
+ * - timestamp
+ * - last trade price
+ * - last trade size (volume)
+ * 
+ * However, you may get:
+ * - timestamp
+ * - 
+ * 
+ * @param columnNames 
+ * @returns 
+ */
 export let load_gold_ticks_data = async () => {
+    let csvOptions: dataForgeFs.ITickCSVOptions = {
+        columnNames: ['timestamp', 'bid', 'ask', 'bid_volume', 'ask_volume'],
+        offset: 0,
+    };
     let dataframe = await dataForgeFs.readGzipFile(__dirname + "/gold-ticks.txt.gz")
-    .parseTicksData({columnNames: ['symbol', "time", "open", "high", "low", "close", "volume"]}); 
+    .parseTicksData(csvOptions); 
 
-    let this_dataframe = dataframe
-    // .renameSeries({'"Date"': 'time'})
-    // .withSeries('open', dataframe.deflate(day => parseThisFloat(day.Open)))
-    // .withSeries('high', dataframe.deflate(day => parseThisFloat(day.High)))
-    // .withSeries('close', dataframe.deflate(day => parseThisFloat(day.Price)))
-    // .withSeries('low', dataframe.deflate(day => parseThisFloat(day.Low)))
-    // .dropSeries(['Open', 'High', 'Price', 'Low'])
-    // .parseDates('time')
-    ;
-    return this_dataframe;
+    return dataframe.parseFloats(['bid', 'ask', 'bid_volume', 'ask_volume']);
 }

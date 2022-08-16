@@ -4,7 +4,7 @@ import 'data-forge-fs';
 import "../../index";
 import * as path from 'path';
 
-import { gold_dataframe } from '../data';
+import { gold_dataframe, load_gold_ticks_data } from '../data';
 import { TimeFrame } from '../../utils/compress';
 
 describe('compress', () => {
@@ -29,6 +29,21 @@ describe('compress', () => {
 
         const df3 = df.compress(TimeFrame.Month);
         expect(df3.count()).to.equal(12);
+    });
+
+    it('compress-ticks-minutes', async function () {
+        const df = await load_gold_ticks_data();
+        expect(df.count()).to.equal(8579);
+
+        let dataframe = df.withSeries('time', df.deflate(tick => {
+            let d = tick.timestamp;
+            let tokens = d.split(' ');
+            let year = d.substring(0, 4);
+            let month = d.substring(4, 6);
+            let day = d.substring(6);
+            return new Date(`${year}-${month}-${day} ${tokens[1]}`);
+        }));
+        
     });
 
 });
