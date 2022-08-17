@@ -136,5 +136,26 @@ export let load_gold_ticks_data = async () => {
     let dataframe = await dataForgeFs.readGzipFile(__dirname + "/gold-ticks.txt.gz")
     .parseTicksData(csvOptions); 
 
-    return dataframe.parseFloats(['bid', 'ask', 'bid_volume', 'ask_volume']);
+    let df = dataframe.parseFloats(['bid', 'ask', 'bid_volume', 'ask_volume']);
+
+    /**
+     * Using the bid as tick open
+     * and ask as tick close
+     * it is not perfect, but it is ok for now
+     */
+    return df.withSeries('time', df.deflate(tick => {
+        let d = tick.timestamp;
+        let tokens = d.split(' ');
+        let ymd = tokens[0];;
+        let year = ymd.substring(0, 4);
+        let month = ymd.substring(4, 6);
+        let day = ymd.substring(6);
+        return new Date(`${year}-${month}-${day} ${tokens[1]}`);
+    }))
+    .withSeries('open', df.deflate(tick => tick.bid))
+    .withSeries('high', df.deflate(tick => tick.ask))
+    .withSeries('close', df.deflate(tick => tick.ask))
+    .withSeries('low', df.deflate(tick => tick.bid))
+    .withSeries('volume', df.deflate(tick => tick.bid_volume + tick.ask_volume))
+    .dropSeries(['timestamp', 'bid', 'ask', 'bid_volume', 'ask_volume']);
 }
