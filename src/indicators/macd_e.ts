@@ -1,5 +1,8 @@
 import { assert } from 'chai';
 import { ISeries, Series, DataFrame, IDataFrame } from 'data-forge';
+
+import { computeEma, computePeriodEma } from './utils';
+
 import "./ema_e";
 
 /**
@@ -59,11 +62,11 @@ declare module "data-forge/build/lib/series" {
 
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
-        macd_e_update (shortPeriod: number, longPeriod: number, signalPeriod: number, update_period: number, key?: string, valueKey?: string): IDataFrame<any, any>;
+        macd_e_update (period: number, update_period: number, options: any): IDataFrame<any, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
-        macd_e_update (shortPeriod: number, longPeriod: number, signalPeriod: number, update_period: number, key?: string, valueKey?: string): IDataFrame<any, any>;
+        macd_e_update (period: number, update_period: number, options: any): IDataFrame<any, any>;
     }
 }
 
@@ -113,20 +116,21 @@ function macd_e<IndexT = any> (
  */
 function macd_e_update<IndexT = any> (
     this: IDataFrame<number, number>, 
-    shortPeriod: number,
-    longPeriod: number,
-    signalPeriod: number, 
-    update_period: number, 
-    key?: string, 
-    valueKey?: string
+    period: number,
+    update_period: number = 1, 
+    options: any = {}
     ): IDataFrame<number, any> {
+
+    let shortPeriod: number = options.shortPeriod || 12;
+    let longPeriod: number = options.longPeriod || 26;
+    let signalPeriod: number = options.signalPeriod || 9;
 
     assert.isNumber(shortPeriod, "Expected 'shortPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the short moving average.");
     assert.isNumber(longPeriod, "Expected 'longPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the long moving average.");
     assert.isNumber(signalPeriod, "Expected 'signalPeriod' parameter to 'Series.macd' to be a number that specifies the time period for the macd signal line.");
 
-    key = key || 'macd';
-    valueKey = valueKey || 'close';
+    let key = options["key"] || 'macd';
+    let valueKey = options["valueKey"] || 'close';
 
     // and we will update the end of course
     let pos: number = this.count() - update_period;
