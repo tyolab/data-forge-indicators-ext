@@ -111,37 +111,37 @@ function macd_e<IndexT = any> (
 /**
  * @todo
  */
-// function macd_e_update<IndexT = any> (
-//     this: IDataFrame<number, number>, 
-//     shortPeriod: number,
-//     longPeriod: number,
-//     signalPeriod: number, 
-//     update_period: number, 
-//     key?: string, 
-//     valueKey?: string
-//     ): IDataFrame<number, any> {
+function macd_e_update<IndexT = any> (
+    this: IDataFrame<number, number>, 
+    shortPeriod: number,
+    longPeriod: number,
+    signalPeriod: number, 
+    update_period: number, 
+    key?: string, 
+    valueKey?: string
+    ): IDataFrame<number, any> {
 
-//     assert.isNumber(shortPeriod, "Expected 'shortPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the short moving average.");
-//     assert.isNumber(longPeriod, "Expected 'longPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the long moving average.");
-//     assert.isNumber(signalPeriod, "Expected 'signalPeriod' parameter to 'Series.macd' to be a number that specifies the time period for the macd signal line.");
+    assert.isNumber(shortPeriod, "Expected 'shortPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the short moving average.");
+    assert.isNumber(longPeriod, "Expected 'longPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the long moving average.");
+    assert.isNumber(signalPeriod, "Expected 'signalPeriod' parameter to 'Series.macd' to be a number that specifies the time period for the macd signal line.");
 
-//     key = key || 'macd';
-//     valueKey = valueKey || 'close';
+    key = key || 'macd';
+    valueKey = valueKey || 'close';
 
-//     // and we will update the end of course
-//     let pos: number = this.count() - update_period;
-//     const lastRow = this.at(pos - 1);
+    // and we will update the end of course
+    let pos: number = this.count() - update_period;
+    const lastRow = this.at(pos - 1);
 
-//     for (let i = pos; i < this.count(); ++i) {
-//         let row = this.at(i);
+    for (let i = pos; i < this.count(); ++i) {
+        let row = this.at(i);
   
-//         let short_ema = 
+        let short_ema = 
 
-//         // const value = computeEma(newValue, preValue, multiplier);
+        // const value = computeEma(newValue, preValue, multiplier);
 
-//     }
-//     return this;
+    }
+    return this;
 
-// };
+};
 
 Series.prototype.macd_e = macd_e;

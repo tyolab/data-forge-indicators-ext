@@ -38,11 +38,11 @@ declare module "data-forge/build/lib/series" {
 
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
-        bollinger_e_update (period: number, stdDevMultUpper: number, stdDevMultLower: number, update_period: number, key?: string, valueKey?: string): IDataFrame<any, any>;
+        bollinger_e_update (period: number, update_period: number, options: any): IDataFrame<any, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
-        bollinger_e_update (period: number, stdDevMultUpper: number, stdDevMultLower: number, update_period: number, ke?: string, valueKey?: string): IDataFrame<any, any>;
+        bollinger_e_update (period: number, update_period: number, options: any): IDataFrame<any, any>;
     }
 }
 
@@ -70,9 +70,9 @@ function computeBB<IndexT = any>(window: ISeries<IndexT, number>, stdDevMultUppe
  */
 function bollinger_e<IndexT = any> (
     this: ISeries<IndexT, number>, 
-    period: number, 
-    stdDevMultUpper: number, 
-    stdDevMultLower: number
+    period: number = 20,
+    stdDevMultUpper: number = 2, 
+    stdDevMultLower: number = 2
     ): IDataFrame<IndexT, IBollingerBand> {
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.bollinger' to be a number that specifies the time period of the moving average.");
@@ -94,20 +94,20 @@ function bollinger_e<IndexT = any> (
  function bollinger_e_update<IndexT = any> (
     this: IDataFrame<number, any>, 
     period: number, 
-    stdDevMultUpper: number, 
-    stdDevMultLower: number,
     update_period: number = 1,
-    key?: string, 
-    valueKey?: string
+    options: any = {},
     ): IDataFrame<number, any> {
+
+    let stdDevMultUpper: number = options.stdDevMultUpper || 2; 
+    let stdDevMultLower: number = options.stdDevMultLower || 2;
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.bollinger' to be a number that specifies the time period of the moving average.");
     assert.isNumber(stdDevMultUpper, "Expected 'stdDevMultUpper' parameter to 'Series.bollinger' to be a number that specifies multipler to compute the upper band from the standard deviation.");
     assert.isNumber(stdDevMultLower, "Expected 'stdDevMultLower' parameter to 'Series.bollinger' to be a number that specifies multipler to compute the upper band from the standard deviation.");
 
     let pos: number = this.count() - update_period;
-    key = key || 'bb';
-    valueKey = valueKey || 'close';
+    let key = options["key"] || 'bb';
+    let valueKey = options["valueKey"] || 'close';
 
     for (let i = pos; i < this.count(); ++i) {
         let last_pos = i - period;

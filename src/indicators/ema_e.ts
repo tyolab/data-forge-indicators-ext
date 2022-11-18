@@ -19,13 +19,13 @@ declare module "data-forge/build/lib/series" {
 
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
-        ema_update_df(period: number, update_period: number, key?: string, valueKey?: string): IDataFrame<IndexT, any>;
-        ema_update_df_from(period: number, update_period: number, dataFrame: IDataFrame<IndexT, ValueT>, key?: string, valueKey?: string): IDataFrame<IndexT, any>;
+        ema_e_update(period: number, update_period: number, options: any): IDataFrame<IndexT, any>;
+        ema_e_update_from(period: number, update_period: number, dataFrame: IDataFrame<IndexT, ValueT>, options: any): IDataFrame<IndexT, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
-        ema_update_df(period: number, update_period: number, key?: string, valueKey?: string): IDataFrame<IndexT, any>;
-        ema_update_df_from(period: number, update_period: number, dataFrame: IDataFrame<IndexT, ValueT>, key?: string, valueKey?: string): IDataFrame<IndexT, any>;
+        ema_e_update(period: number, update_period: number, options: any): IDataFrame<IndexT, any>;
+        ema_e_update_from(period: number, update_period: number, dataFrame: IDataFrame<IndexT, ValueT>, options: any): IDataFrame<IndexT, any>;
     }
 }
 
@@ -91,7 +91,7 @@ function ema_update<IndexT = any>(this: ISeries<IndexT, number>, newIndex: Index
  * @param valueKey 
  * @returns 
  */
-function ema_update_df_from<IndexT = number>(this: IDataFrame<number, any>, period: number, update_period: number = 1, dataFrame: IDataFrame<number, any> = this, key?: string, valueKey?: string): IDataFrame<number, any> {
+function ema_e_update_from<IndexT = number>(this: IDataFrame<number, any>, period: number, update_period: number = 1, dataFrame: IDataFrame<number, any> = this, options: any = {}): IDataFrame<number, any> {
     var thisCount = this.count();
     var dataCount = dataFrame.count();
 
@@ -101,14 +101,14 @@ function ema_update_df_from<IndexT = number>(this: IDataFrame<number, any>, peri
     if (dataCount < (period + 1))
         return this;
 
-    // assert.isTrue(this.count() <= dataFrame.count(), "Expected 'DataFrame.ema_update_df_from' to be called on a DataFrame that has a smaller number of rows than the source DataFrame.");
+    // assert.isTrue(this.count() <= dataFrame.count(), "Expected 'DataFrame.ema_e_update_from' to be called on a DataFrame that has a smaller number of rows than the source DataFrame.");
 
-    assert.isTrue(this.count() > 0, "Expected 'DataFrame.ema_update_df_from' to be called on a DataFrame that has at least one row.");
+    assert.isTrue(this.count() > 0, "Expected 'DataFrame.ema_e_update_from' to be called on a DataFrame that has at least one row.");
 
     assert.isNumber(period, "Expected 'period' parameter to 'DataFrame' to be a number that specifies the time period of the moving average.");
 
-    key = key || 'ema';
-    valueKey = valueKey || 'close';
+    let key = options["key"] || 'ema';
+    let valueKey = options["valueKey"] || 'close';
 
     // and we will update the end of course
     let newDataFrame = this;
@@ -138,12 +138,15 @@ function ema_update_df_from<IndexT = number>(this: IDataFrame<number, any>, peri
 
     var preValue = lastRow[key];
     ++pos;
-    for (let i = pos; i < dataFrame.count(); ++i) {
+    let count = dataFrame.count();
+    let last = dataFrame.last();
+
+    assert.isDefined(last[valueKey], "Expected 'DataFrame.ema_e_update' to be called on a DataFrame that has a '" + valueKey + "' column.");
+
+    for (let i = pos; i < count; ++i) {
         let valueRow = dataFrame.at(i);
         let row = newDataFrame.at(i);
         const multiplier = (2 / (period + 1));
-
-        assert.isDefined(valueRow[valueKey], "Expected 'DataFrame.ema_update_df' to be called on a DataFrame that has a '" + valueKey + "' column.");
 
         let newValue = valueRow[valueKey];
         const value = computeEma(newValue, preValue, multiplier);
@@ -162,12 +165,12 @@ function ema_update_df_from<IndexT = number>(this: IDataFrame<number, any>, peri
     return newDataFrame;
 }
 
-function ema_update_df<IndexT = number>(this: IDataFrame<number, any>, period: number, update_period: number = 1, key?: string, valueKey?: string): IDataFrame<number, any> {
-    return ema_update_df_from.call(this, period, update_period, this, key, valueKey);
+function ema_e_update<IndexT = number>(this: IDataFrame<number, any>, period: number, update_period: number = 1, options: any): IDataFrame<number, any> {
+    return ema_e_update_from.call(this, period, update_period, this, options);
 }
 
-DataFrame.prototype.ema_update_df = ema_update_df;
-DataFrame.prototype.ema_update_df_from = ema_update_df_from;
+DataFrame.prototype.ema_e_update = ema_e_update;
+DataFrame.prototype.ema_e_update_from = ema_e_update_from;
 
 Series.prototype.ema_update = ema_update;
 Series.prototype.ema_e = ema_e;
