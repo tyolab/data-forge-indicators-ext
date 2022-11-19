@@ -115,11 +115,12 @@ function atr<IndexT = any>(this: IDataFrame<IndexT, any>, period: number = 14): 
 function atr_update<IndexT = number>(this: IDataFrame<number, any>, period: number, update_period: number = 1, options: any = {}): IDataFrame<number, any> {
     let key: string = options['key'] || 'atr';
 
-    let pos: number = this.count() - update_period;
+    let count = this.count(); 
+    let pos: number = count - update_period;
     let last = this.last();
     let range_key = 'range';
 
-    for (let i = pos; i < this.count(); ++i) {
+    for (let i = pos; i < count; ++i) {
         const lastRow = this.at(pos - 1);
         let row = this.at(i);
 

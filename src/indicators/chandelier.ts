@@ -96,9 +96,10 @@ function chandelier_exit<IndexT = any> (
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.chandelier_exit' to be a number that specifies the time period of the moving average.");
 
-    let pos: number = this.count() - update_period;
+    let count = this.count(); 
+    let pos: number = count - update_period;
 
-    for (let i = pos; i < this.count(); ++i) {
+    for (let i = pos; i < count; ++i) {
         let last_pos = i - period;
         let window = this.between(last_pos, i);
         let row = this.at(i);

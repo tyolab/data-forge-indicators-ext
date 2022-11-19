@@ -35,9 +35,10 @@ function range<IndexT = any>(this: IDataFrame<IndexT, OHLC>, period: number = 14
 
 function range_update<IndexT = number>(this: IDataFrame<number, any>, period: number, update_period: number = 1, options: any = {}): IDataFrame<number, any> {
     let key: string = options['key'] || 'range';
-    let pos: number = this.count() - update_period;
+    let count = this.count(); 
+    let pos: number = count - update_period;
 
-    for (let i = pos; i < this.count(); ++i) {
+    for (let i = pos; i < count; ++i) {
         const lastRow = this.at(pos - 1);
         let row = this.at(i);
         row[key] = computeRange(lastRow, row);

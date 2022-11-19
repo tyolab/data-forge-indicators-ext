@@ -114,13 +114,14 @@ function ema_e_update_from<IndexT = number>(this: IDataFrame<number, any>, perio
     let newDataFrame = this;
     var pos = update_period > dataCount ? 1 : dataCount - update_period;
     --pos;
-    if (pos < period)
-        pos = period;
+    // the following doesn't make sense
+    // if (pos < period)
+    //     pos = period;
     var lastRow = undefined;
     if (pos < thisCount) {
         lastRow = newDataFrame.at(pos);
         while (lastRow && lastRow[key] === undefined) {
-            if (pos >= (period)) {
+            if ((pos - period) >= 0) {
                 var tempDataFrame = dataFrame.between(pos - period, pos - 1);
                 var sma = tempDataFrame.getSeries(valueKey).average();
                 lastRow[key] = sma;
@@ -138,12 +139,11 @@ function ema_e_update_from<IndexT = number>(this: IDataFrame<number, any>, perio
 
     var preValue = lastRow[key];
     ++pos;
-    let count = dataFrame.count();
     let last = dataFrame.last();
 
     assert.isDefined(last[valueKey], "Expected 'DataFrame.ema_e_update' to be called on a DataFrame that has a '" + valueKey + "' column.");
 
-    for (let i = pos; i < count; ++i) {
+    for (let i = pos; i < dataCount; ++i) {
         let valueRow = dataFrame.at(i);
         let row = newDataFrame.at(i);
         const multiplier = (2 / (period + 1));

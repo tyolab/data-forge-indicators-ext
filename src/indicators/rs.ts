@@ -66,11 +66,12 @@ function rs_update<IndexT = number>(this: IDataFrame<number, any>, comparative: 
     }
     assert.equal(this.count(), comparative.count(), "The two dataframes must contain same number of values");
 
-    let pos: number = this.count() - update_period;
+    let count = this.count(); 
+    let pos: number = count - update_period;
     key = key || 'rs';
     valueKey = valueKey || 'close';
 
-    for (let i = pos; i < this.count(); ++i) {
+    for (let i = pos; i < count; ++i) {
         let last_pos = i - period;
         let window = this.between(last_pos, i).getSeries(valueKey);
         let window2 = comparative.between(last_pos, i).getSeries(valueKey); 

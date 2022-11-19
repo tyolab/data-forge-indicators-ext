@@ -55,10 +55,11 @@ function lowest<IndexT = any>(this: IDataFrame<number, OHLC>, period: number = 3
 }
 
 function lowest_update<IndexT = number>(this: IDataFrame<number, any>, last_low: any, update_period: number): any {
-    let pos: number = this.count() - update_period;
+    let count = this.count(); 
+    let pos: number = count - update_period;
     let new_low = last_low;
 
-    for (let i = pos; i < this.count(); ++i) {
+    for (let i = pos; i < count; ++i) {
         let day = this.at(i);
 
         if (day.low && day.low <= new_low.low) {
@@ -70,10 +71,11 @@ function lowest_update<IndexT = number>(this: IDataFrame<number, any>, last_low:
 }
 
 function highest_update<IndexT = number>(this: IDataFrame<number, any>, last_high: any, update_period: number): any {
-    let pos: number = this.count() - update_period;
+    let count = this.count(); 
+    let pos: number = count - update_period;
     let new_high = last_high;
 
-    for (let i = pos; i < this.count(); ++i) {
+    for (let i = pos; i < count; ++i) {
         let day = this.at(i);
 
         if (day.high && day.high >= new_high.high) {

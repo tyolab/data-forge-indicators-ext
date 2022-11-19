@@ -105,11 +105,12 @@ function bollinger_e<IndexT = any> (
     assert.isNumber(stdDevMultUpper, "Expected 'stdDevMultUpper' parameter to 'Series.bollinger' to be a number that specifies multipler to compute the upper band from the standard deviation.");
     assert.isNumber(stdDevMultLower, "Expected 'stdDevMultLower' parameter to 'Series.bollinger' to be a number that specifies multipler to compute the upper band from the standard deviation.");
 
-    let pos: number = this.count() - update_period;
+    let count = this.count(); 
+    let pos: number = count - update_period;
     let key = options["key"] || 'bb';
     let valueKey = options["valueKey"] || 'close';
 
-    for (let i = pos; i < this.count(); ++i) {
+    for (let i = pos; i < count; ++i) {
         let last_pos = i - period;
         let window = this.between(last_pos, i).getSeries(valueKey);
         let row = this.at(i);
