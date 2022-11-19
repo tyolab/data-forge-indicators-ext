@@ -98,8 +98,8 @@ function bollinger_e<IndexT = any> (
     options: any = {},
     ): IDataFrame<number, any> {
 
-    let stdDevMultUpper: number = options.stdDevMultUpper || 2; 
-    let stdDevMultLower: number = options.stdDevMultLower || 2;
+    let stdDevMultUpper: number = options.stdDevMultUpper || options.stdDev || 2; 
+    let stdDevMultLower: number = options.stdDevMultLower || options.stdDev || 2;
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.bollinger' to be a number that specifies the time period of the moving average.");
     assert.isNumber(stdDevMultUpper, "Expected 'stdDevMultUpper' parameter to 'Series.bollinger' to be a number that specifies multipler to compute the upper band from the standard deviation.");
