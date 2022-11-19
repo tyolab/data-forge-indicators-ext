@@ -108,11 +108,11 @@ function bollinger_e<IndexT = any> (
     let count = this.count(); 
     let pos: number = count - update_period;
     let key = options["key"] || 'bb';
-    let valueKey = options["valueKey"] || 'close';
+    let value_key = options["value_key"] || 'close';
 
     for (let i = pos; i < count; ++i) {
         let last_pos = i - period;
-        let window = this.between(last_pos, i).getSeries(valueKey);
+        let window = this.between(last_pos, i).getSeries(value_key);
         let row = this.at(i);
         const value = computeBB(window, stdDevMultUpper, stdDevMultLower);
         row[key] = value;

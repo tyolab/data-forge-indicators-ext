@@ -138,7 +138,7 @@ function macd_e_update<IndexT = any> (
     assert.isNumber(signalPeriod, "Expected 'signalPeriod' parameter to 'Series.macd' to be a number that specifies the time period for the macd signal line.");
 
     let key = options["key"] || 'macd';
-    let valueKey = options["valueKey"] || 'close';
+    let value_key = options["value_key"] || 'close';
 
     // and we will update the end of course
     let count = this.count();
@@ -152,9 +152,9 @@ function macd_e_update<IndexT = any> (
     let dataFrame = this;
     
     if (!last[shortEMAKey])
-        dataFrame = dataFrame.ema_e_update(shortPeriod, update_period, { key: shortEMAKey, valueKey: valueKey});
+        dataFrame = dataFrame.ema_e_update(shortPeriod, update_period, { key: shortEMAKey, value_key: value_key});
     if (!last[longEMAKey])
-        dataFrame = dataFrame.ema_e_update(longPeriod, update_period, { key: longEMAKey, valueKey: valueKey});
+        dataFrame = dataFrame.ema_e_update(longPeriod, update_period, { key: longEMAKey, value_key: value_key});
 
     // getting the data
     for (let i = pos; i < count; ++i) {

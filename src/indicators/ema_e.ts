@@ -88,7 +88,7 @@ function ema_update<IndexT = any>(this: ISeries<IndexT, number>, newIndex: Index
  * @param period 
  * @param update_period 
  * @param key 
- * @param valueKey 
+ * @param value_key 
  * @returns 
  */
 function ema_e_update_from<IndexT = number>(this: IDataFrame<number, any>, period: number, update_period: number = 1, dataFrame: IDataFrame<number, any> = this, options: any = {}): IDataFrame<number, any> {
@@ -108,7 +108,7 @@ function ema_e_update_from<IndexT = number>(this: IDataFrame<number, any>, perio
     assert.isNumber(period, "Expected 'period' parameter to 'DataFrame' to be a number that specifies the time period of the moving average.");
 
     let key = options["key"] || 'ema';
-    let valueKey = options["valueKey"] || 'close';
+    let value_key = options["value_key"] || 'close';
 
     // and we will update the end of course
     let newDataFrame = this;
@@ -123,7 +123,7 @@ function ema_e_update_from<IndexT = number>(this: IDataFrame<number, any>, perio
         while (lastRow && lastRow[key] === undefined) {
             if ((pos - period) >= 0) {
                 var tempDataFrame = dataFrame.between(pos - period, pos - 1);
-                var sma = tempDataFrame.getSeries(valueKey).average();
+                var sma = tempDataFrame.getSeries(value_key).average();
                 lastRow[key] = sma;
                 break;
             }
@@ -141,14 +141,14 @@ function ema_e_update_from<IndexT = number>(this: IDataFrame<number, any>, perio
     ++pos;
     let last = dataFrame.last();
 
-    assert.isDefined(last[valueKey], "Expected 'DataFrame.ema_e_update' to be called on a DataFrame that has a '" + valueKey + "' column.");
+    assert.isDefined(last[value_key], "Expected 'DataFrame.ema_e_update' to be called on a DataFrame that has a '" + value_key + "' column.");
 
     for (let i = pos; i < dataCount; ++i) {
         let valueRow = dataFrame.at(i);
         let row = newDataFrame.at(i);
         const multiplier = (2 / (period + 1));
 
-        let newValue = valueRow[valueKey];
+        let newValue = valueRow[value_key];
         const value = computeEma(newValue, preValue, multiplier);
 
         if (i < thisCount)
@@ -156,7 +156,7 @@ function ema_e_update_from<IndexT = number>(this: IDataFrame<number, any>, perio
         else {
             var newRow: any = {};
             newRow[key] = value;
-            newRow[valueKey] = newValue;
+            newRow[value_key] = newValue;
             newDataFrame = newDataFrame.appendPair([i, newRow]);
         }
 
