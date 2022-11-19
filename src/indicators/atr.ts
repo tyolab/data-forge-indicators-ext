@@ -119,6 +119,9 @@ function atr_update<IndexT = number>(this: IDataFrame<number, any>, period: numb
     let pos: number = count - update_period;
     let last = this.last();
     let range_key = 'range';
+    let range_key_with_prefix = 'range' + period;
+    if (typeof last[range_key_with_prefix] === 'number')
+        range_key = range_key_with_prefix;
 
     for (let i = pos; i < count; ++i) {
         const lastRow = this.at(pos - 1);
@@ -127,9 +130,9 @@ function atr_update<IndexT = number>(this: IDataFrame<number, any>, period: numb
         let first_pos = i - period - 1;
         if (first_pos >= 0) {
             let ranges;
-            if (typeof last.range === 'number') {
+            if (typeof last[range_key] === 'number') {
                 let window = this.skip(first_pos + 1).take(period);
-                ranges = window.deflate(row => row.range);
+                ranges = window.deflate(row => row[range_key]);
             }
             else {
                 let window = this.skip(first_pos).take(period + 1);
