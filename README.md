@@ -1,6 +1,6 @@
 # data-forge-indicators-ext
 
-This is for the extension of [data forge indicators](https://data-forge.github.io/data-forge-indicators/).
+This is an extension of [data forge indicators](https://data-forge.github.io/data-forge-indicators/) with more indicators.
 
 ## OHLC Data
 basically we follow the data format as in the following:
@@ -19,6 +19,21 @@ Please note, in the OHLC data object, the date is a string type using the "YYYYM
 
 ## Test Data
 Sample gold data (2021) is included for testing.
+
+## Indicators
+
+### EMA
+
+This version of EMA fixes a calcuation bug in the original version.
+
+
+### Chandelier Exit
+
+
+### Donchian Channel
+
+
+### Relative Strength (RS)
 
 ## Maintainer
 

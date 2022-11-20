@@ -33,6 +33,8 @@ describe('compress', () => {
 
     // ticks data with only bid and ask
     it('compress-minutes', async function () {
+        this.timeout(20000);
+
         const df = await load_gold_ticks_data();
         expect(df.count()).to.equal(222468);
 
