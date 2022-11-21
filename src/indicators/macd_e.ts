@@ -1,5 +1,8 @@
 import { assert } from 'chai';
 import { ISeries, Series, DataFrame, IDataFrame } from 'data-forge';
+
+import { computeEma, computePeriodEma } from './utils';
+
 import "./ema_e";
 
 /**
@@ -31,20 +34,20 @@ export interface IMacdEntry {
      */
     histogram?: number;
 
-    /**
-     * Short Period.
-     */
-    shortPeriod?: number;
+    // /**
+    //  * Short Period.
+    //  */
+    // shortPeriod?: number;
 
-    /**
-     * Long Period.
-     */
-     longPeriod?: number;
+    // /**
+    //  * Long Period.
+    //  */
+    // longPeriod?: number;
 
-    /**
-     * Signal Period.
-     */
-    signalPeriod?: number;
+    // /**
+    //  * Signal Period.
+    //  */
+    // signalPeriod?: number;
 }
 
 declare module "data-forge/build/lib/series" {
@@ -59,11 +62,11 @@ declare module "data-forge/build/lib/series" {
 
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
-        macd_e_update (shortPeriod: number, longPeriod: number, signalPeriod: number, update_period: number, key?: string, valueKey?: string): IDataFrame<any, any>;
+        macd_e_update (period: number, update_period: number, options: any): IDataFrame<any, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
-        macd_e_update (shortPeriod: number, longPeriod: number, signalPeriod: number, update_period: number, key?: string, valueKey?: string): IDataFrame<any, any>;
+        macd_e_update (period: number, update_period: number, options: any): IDataFrame<any, any>;
     }
 }
 
@@ -111,37 +114,71 @@ function macd_e<IndexT = any> (
 /**
  * @todo
  */
-// function macd_e_update<IndexT = any> (
-//     this: IDataFrame<number, number>, 
-//     shortPeriod: number,
-//     longPeriod: number,
-//     signalPeriod: number, 
-//     update_period: number, 
-//     key?: string, 
-//     valueKey?: string
-//     ): IDataFrame<number, any> {
+function macd_e_update<IndexT = any> (
+    this: IDataFrame<number, number>, 
+    period: number,
+    update_period: number = 1, 
+    options: any = {}
+    ): IDataFrame<number, any> {
 
-//     assert.isNumber(shortPeriod, "Expected 'shortPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the short moving average.");
-//     assert.isNumber(longPeriod, "Expected 'longPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the long moving average.");
-//     assert.isNumber(signalPeriod, "Expected 'signalPeriod' parameter to 'Series.macd' to be a number that specifies the time period for the macd signal line.");
+    let shortPeriod: number = options.shortPeriod || 12;
+    let longPeriod: number = options.longPeriod || 26;
+    let signalPeriod: number = options.signalPeriod || 9;
+    let signalPeriodMultiplier: number = 2 / (signalPeriod + 1);
 
-//     key = key || 'macd';
-//     valueKey = valueKey || 'close';
+    let currentMACD = options.currentMACD;
 
-//     // and we will update the end of course
-//     let pos: number = this.count() - update_period;
-//     const lastRow = this.at(pos - 1);
+    if (!currentMACD) {
+        let deflateKey: string = options.deflateKey || 'close';
+        return this.getSeries(deflateKey).macd_e(shortPeriod, longPeriod, signalPeriod);
+    }
 
-//     for (let i = pos; i < this.count(); ++i) {
-//         let row = this.at(i);
+    assert.isNumber(shortPeriod, "Expected 'shortPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the short moving average.");
+    assert.isNumber(longPeriod, "Expected 'longPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the long moving average.");
+    assert.isNumber(signalPeriod, "Expected 'signalPeriod' parameter to 'Series.macd' to be a number that specifies the time period for the macd signal line.");
+
+    let key = options["key"] || 'macd';
+    let value_key = options["value_key"] || 'close';
+
+    // and we will update the end of course
+    let count = this.count();
+    let pos: number = count - update_period;
+    const lastRow = this.at(pos - 1);
+
+    let shortEMAKey = options.shortEMAKey || ("ema" + shortPeriod);
+    let longEMAKey = options.longEMAKey ||  ("ema" + longPeriod);
+    
+    let last: any = this.last();
+    let dataFrame = this;
+    
+    if (!last[shortEMAKey])
+        dataFrame = dataFrame.ema_e_update(shortPeriod, update_period, { key: shortEMAKey, value_key: value_key});
+    if (!last[longEMAKey])
+        dataFrame = dataFrame.ema_e_update(longPeriod, update_period, { key: longEMAKey, value_key: value_key});
+
+    // getting the data
+    for (let i = pos; i < count; ++i) {
+        let row: any = dataFrame.at(i);
+        let last_macd = currentMACD.last();
+        let index = currentMACD.getIndex().last();
   
-//         let short_ema = 
+        let shortEMA = row[options.shortEMAKey];
+        let longEMA = row[options.longEMAKey];
+        let macd = shortEMA - longEMA;
+        let signal = computeEma(macd, last_macd.macd, signalPeriodMultiplier);
 
-//         // const value = computeEma(newValue, preValue, multiplier);
+        let macd_v = {
+            shortEMA: shortEMA,
+            longEMA: longEMA,
+            macd: macd,
+            signal: signal,
+            histogram: macd - signal
+        }
+        ++index;
+        currentMACD = currentMACD.appendPair(index, macd_v);
+    }
+    return currentMACD;
 
-//     }
-//     return this;
-
-// };
+};
 
 Series.prototype.macd_e = macd_e;

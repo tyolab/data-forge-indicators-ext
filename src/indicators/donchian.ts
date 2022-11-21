@@ -24,12 +24,12 @@ export interface IDonchianChannel {
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
         donchian_channel (period: number): IDataFrame<any, IDonchianChannel>;
-        donchian_channel_update (period: number, update_period: number, key?: string): IDataFrame<any, any>;
+        donchian_channel_update (period: number, update_period: number, options: any): IDataFrame<any, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
         donchian_channel (period: number): IDataFrame<any, IDonchianChannel>;
-        donchian_channel_update (period: number, update_period: number, key?: string): IDataFrame<any, any>;
+        donchian_channel_update (period: number, update_period: number, options: any): IDataFrame<any, any>;
     }
 }
 
@@ -79,16 +79,16 @@ function donchian_channel<IndexT = any> (
     this: IDataFrame<number, any>, 
     period: number, 
     update_period: number = 1,
-    key?: string
+    options: any = {}
     ): IDataFrame<number, any> {
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.donchian_channel' to be a number that specifies the time period of the moving average.");
 
+    let count = this.count(); 
+    let pos: number = count - update_period;
+    let key: string = options['key'] || 'donchian_channel';
 
-    let pos: number = this.count() - update_period;
-    key = key || 'donchian_channel';
-
-    for (let i = pos; i < this.count(); ++i) {
+    for (let i = pos; i < count; ++i) {
         let last_pos = i - period;
         let window = this.between(last_pos, i);
         let row = this.at(i);

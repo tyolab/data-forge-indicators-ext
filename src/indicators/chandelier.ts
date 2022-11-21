@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { ISeries, Series, DataFrame, IDataFrame } from 'data-forge';
 
-import { computeATR } from './utils';
+import { computeRange } from './utils';
 
 export interface IChandelierExit {
     /**
@@ -19,34 +19,39 @@ export interface IChandelierExit {
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
         chandelier_exit (period: number, multiplier: number): ISeries<any, IChandelierExit>;
-        chandelier_exit_update (period: number, update_period: number, key: string, multiplier: number): IDataFrame<any, any>;
+        chandelier_exit_update (period: number, update_period: number, options: any): IDataFrame<any, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
         chandelier_exit (period: number, multiplier: number): ISeries<any, IChandelierExit>;
-        chandelier_exit_update (period: number, update_period: number, key: string, multiplier: number): IDataFrame<any, any>;
+        chandelier_exit_update (period: number, update_period: number, options: any): IDataFrame<any, any>;
     }
 }
 
 function computeChandelierExit<IndexT>(window: IDataFrame<IndexT, any>, multiplier: number): IChandelierExit {
     let max = 0;
     let min = -1;
-    let ranges = window.rollingWindow(2)
-    .select<number>(window2 => {
-        const day1 = window2.first();
-        const day2 = window2.last();
+    let ranges;
+    let last = window.last();
+    if (typeof last.range === 'number')
+        ranges = window.deflate(row => row.range);
+    else
+        ranges = window.rollingWindow(2)
+        .select<number>(window2 => {
+            const day1 = window2.first();
+            const day2 = window2.last();
 
-        if (min === -1)
-            min = day2.low;
-        
-        if (day2.low < min)
-            min = day2.low;
+            if (min === -1)
+                min = day2.low;
+            
+            if (day2.low < min)
+                min = day2.low;
 
-        if (day2.high > max)
-            max = day2.high;
+            if (day2.high > max)
+                max = day2.high;
 
-        return computeATR(day1, day2);
-    });
+            return computeRange(day1, day2);
+        });
 
     let atr = ranges.average();
     let long = max  - atr * multiplier;
@@ -83,16 +88,18 @@ function chandelier_exit<IndexT = any> (
     this: IDataFrame<number, any>, 
     period: number, 
     update_period: number = 1,
-    key?: string,
-    multiplier: number = 3
+    options: any = {},
     ): IDataFrame<number, any> {
+
+    let key: string = options['key'] || "chandelier_exit";
+    let multiplier: number = options['multiplier'] || 3;
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.chandelier_exit' to be a number that specifies the time period of the moving average.");
 
-    let pos: number = this.count() - update_period;
-    key = key || 'chandelier_exit';
+    let count = this.count(); 
+    let pos: number = count - update_period;
 
-    for (let i = pos; i < this.count(); ++i) {
+    for (let i = pos; i < count; ++i) {
         let last_pos = i - period;
         let window = this.between(last_pos, i);
         let row = this.at(i);

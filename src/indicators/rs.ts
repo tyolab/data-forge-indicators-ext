@@ -20,11 +20,11 @@ declare module "data-forge/build/lib/series" {
 
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
-        rs_update(comparative: IDataFrame<number, any>, length: number, update_period: number, key?: string, valueKey?: string): IDataFrame<IndexT, any>;
+        rs_update(comparative: IDataFrame<number, any>, length: number, update_period: number, key?: string, value_key?: string): IDataFrame<IndexT, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
-        rs_update(comparative: IDataFrame<number, any>, length: number, update_period: number, key?: string, valueKey?: string): IDataFrame<IndexT, any>;
+        rs_update(comparative: IDataFrame<number, any>, length: number, update_period: number, key?: string, value_key?: string): IDataFrame<IndexT, any>;
     }
 }
 
@@ -59,21 +59,22 @@ function rs<IndexT = any>(this: ISeries<IndexT, number>, comparative: ISeries<In
         .select(pair1 => pair1[1]);
 }
 
-function rs_update<IndexT = number>(this: IDataFrame<number, any>, comparative: IDataFrame<number, any>, period: number, update_period: number = 1, key?: string, valueKey?: string): IDataFrame<number, any> {
+function rs_update<IndexT = number>(this: IDataFrame<number, any>, comparative: IDataFrame<number, any>, period: number, update_period: number = 1, key?: string, value_key?: string): IDataFrame<number, any> {
 
     if (!comparative) {
         return this;
     }
     assert.equal(this.count(), comparative.count(), "The two dataframes must contain same number of values");
 
-    let pos: number = this.count() - update_period;
+    let count = this.count(); 
+    let pos: number = count - update_period;
     key = key || 'rs';
-    valueKey = valueKey || 'close';
+    value_key = value_key || 'close';
 
-    for (let i = pos; i < this.count(); ++i) {
+    for (let i = pos; i < count; ++i) {
         let last_pos = i - period;
-        let window = this.between(last_pos, i).getSeries(valueKey);
-        let window2 = comparative.between(last_pos, i).getSeries(valueKey); 
+        let window = this.between(last_pos, i).getSeries(value_key);
+        let window2 = comparative.between(last_pos, i).getSeries(value_key); 
         let row = this.at(i);
         const value = computeRS(window, window2);
         row[key] = value;
