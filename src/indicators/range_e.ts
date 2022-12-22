@@ -39,7 +39,7 @@ function range_e_update<IndexT = number>(this: IDataFrame<number, any>, update_p
     let pos: number = count - update_period;
 
     for (let i = pos; i < count; ++i) {
-        const lastRow = this.at(pos - 1);
+        const lastRow = this.at(i - 1);
         let row = this.at(i);
         row[key] = computeRange(lastRow, row);
     }

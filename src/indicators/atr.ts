@@ -118,16 +118,15 @@ function atr_update<IndexT = number>(this: IDataFrame<number, any>, period: numb
     let count = this.count(); 
     let pos: number = count - update_period;
     let last = this.last();
-    let range_key = 'range';
-    let range_key_with_prefix = 'range' + period;
-    if (typeof last[range_key_with_prefix] === 'number')
-        range_key = range_key_with_prefix;
+    let range_key = options.range_key || 'range';
 
     for (let i = pos; i < count; ++i) {
-        const lastRow = this.at(pos - 1);
+        // const lastRow = this.at(pos - 1);
         let row = this.at(i);
 
-        let first_pos = i - period - 1;
+        // i is the index of the last row before the update
+        // it will be used for skipping the N rows which is one less than the period + 1 already
+        let first_pos = i - period; 
         if (first_pos >= 0) {
             let ranges;
             if (typeof last[range_key] === 'number') {
