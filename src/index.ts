@@ -12,6 +12,7 @@ import "./indicators/rs";
 import "./indicators/gaps_pp";
 import "./indicators/highest_range";
 import "./indicators/extreme";
+import "./indicators/range_e";
 
 // utilites for supporting the indicators
 import "./utils/compress"

@@ -182,3 +182,4 @@ function macd_e_update<IndexT = any> (
 };
 
 Series.prototype.macd_e = macd_e;
+DataFrame.prototype.macd_e_update = macd_e_update;

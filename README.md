@@ -18,7 +18,7 @@ basically we follow the data format as in the following:
 Please note, in the OHLC data object, the date is a string type using the "YYYYMMDD" format, and the time is a "Date" type.
 
 ## Test Data
-Sample gold data (2021) is included for testing.
+Sample gold data (year 2021 from: https://au.investing.com/commodities/gold-historical-data) is included for testing.
 
 ## Indicators
 

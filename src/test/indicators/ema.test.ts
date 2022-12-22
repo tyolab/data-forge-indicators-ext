@@ -129,7 +129,7 @@ describe('ema', () => {
         const expectedEma = '22.92'; 
 
         let newDataFrame = newdf.withSeries('ema', emaSeries).appendPair([30, {pos: 30, value: 22.17}]);
-        newDataFrame = newDataFrame.resetIndex().ema_update_df(10, 1, "ema", "value");
+        newDataFrame = newDataFrame.resetIndex().ema_e_update(10, 1, {key: "ema", value_key: "value"});
         let newEma = newDataFrame.getSeries('ema').at(newDataFrame.count() - 1).toFixed(2);
         expect(newEma).to.equal(expectedEma);
 

@@ -7,17 +7,17 @@ import { computeRange as computeRange } from './utils';
 
 declare module "data-forge/build/lib/dataframe" {
     interface IDataFrame<IndexT, ValueT> {
-        range(period: number): ISeries<IndexT, number>;
-        range_update(period: number, options: any): IDataFrame<IndexT, any>;
+        range_e(): ISeries<IndexT, number>;
+        range_e_update(update_period: number, options: any): IDataFrame<IndexT, any>;
     }
 
     interface DataFrame<IndexT, ValueT> {
-        range(period: number): ISeries<IndexT, number>;
-        range_update(period: number, update_period: number, options: any): IDataFrame<IndexT, any>;
+        range_e(): ISeries<IndexT, number>;
+        range_e_update(update_period: number, options: any): IDataFrame<IndexT, any>;
     }
 }
 
-function range<IndexT = any>(this: IDataFrame<IndexT, OHLC>, period: number = 14): ISeries<IndexT, number> {
+function range_e<IndexT = any>(this: IDataFrame<IndexT, OHLC>): ISeries<IndexT, number> {
     // as we can do the first day's range
    return this.rollingWindow(2)
         .select<[IndexT, number]>(window => {
@@ -33,7 +33,7 @@ function range<IndexT = any>(this: IDataFrame<IndexT, OHLC>, period: number = 14
         .select(pair1 => pair1[1]);
 }
 
-function range_update<IndexT = number>(this: IDataFrame<number, any>, period: number, update_period: number = 1, options: any = {}): IDataFrame<number, any> {
+function range_e_update<IndexT = number>(this: IDataFrame<number, any>, update_period: number = 1, options: any = {}): IDataFrame<number, any> {
     let key: string = options['key'] || 'range';
     let count = this.count(); 
     let pos: number = count - update_period;
@@ -45,5 +45,5 @@ function range_update<IndexT = number>(this: IDataFrame<number, any>, period: nu
     }
     return this;
 }
-DataFrame.prototype.range = range;
-DataFrame.prototype.range_update = range_update;
+DataFrame.prototype.range_e = range_e;
+DataFrame.prototype.range_e_update = range_e_update;

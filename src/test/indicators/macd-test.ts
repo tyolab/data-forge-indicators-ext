@@ -24,7 +24,7 @@ describe('macd', () => {
        let shortEma = row.shortEMA;
        expect(shortEma.toFixed(2)).to.equal('22.18');
 
-       console.log(macd.merge(df).toString());
+       // console.log(macd.merge(df).toString());
 
     });
 

@@ -73,7 +73,7 @@ declare module "data-forge/build/lib/dataframe" {
  * @param this 
  * @param timeframe 
  */
-function tickToMinutes<IndexT = number>(this: IDataFrame<number, any>, columns?: TickColumns): IDataFrame<number, any> {
+function tickToMinutes<IndexT>(this: IDataFrame<IndexT, any>, columns?: TickColumns): IDataFrame<IndexT, any> {
     columns = columns || {time: 'time', last_trade_price: 'last_trade_price', last_trade_size: 'last_trade_size'};
     if (!columns.time)
         columns.time = 'time';
@@ -109,7 +109,7 @@ function tickToMinutes<IndexT = number>(this: IDataFrame<number, any>, columns?:
  * @param timeframe 
  * @returns 
  */
-function compressMinutes<IndexT = number>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeFrame, from: TimeFrame): IDataFrame<number, any> {
+function compressMinutes<IndexT>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeFrame, from: TimeFrame): IDataFrame<IndexT, any> {
 
     assert.isAbove(timeframe, 0, "Expected timeframe to be greater than 0");
 
@@ -177,7 +177,7 @@ function compressMinutes<IndexT = number>(this: IDataFrame<IndexT, OHLC>, timefr
         rows.push(row);
     }
 
-    return new DataFrame<number, any>({
+    return new DataFrame<IndexT, any>({
         rows: rows,
         columnNames: ['time', 'open', 'high', 'low', 'close', 'volume'],
     });;
