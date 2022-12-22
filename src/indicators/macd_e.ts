@@ -116,7 +116,7 @@ function macd_e<IndexT = any> (
  */
 function macd_e_update<IndexT = any> (
     this: IDataFrame<number, number>, 
-    period: number,
+    period: number = 0,
     update_period: number = 1, 
     options: any = {}
     ): IDataFrame<number, any> {
@@ -137,13 +137,12 @@ function macd_e_update<IndexT = any> (
     assert.isNumber(longPeriod, "Expected 'longPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the long moving average.");
     assert.isNumber(signalPeriod, "Expected 'signalPeriod' parameter to 'Series.macd' to be a number that specifies the time period for the macd signal line.");
 
-    let key = options["key"] || 'macd';
+    // let key = options["key"] || 'macd';
     let value_key = options["value_key"] || 'close';
 
     // and we will update the end of course
     let count = this.count();
     let pos: number = count - update_period;
-    const lastRow = this.at(pos - 1);
 
     let shortEMAKey = options.shortEMAKey || ("ema" + shortPeriod);
     let longEMAKey = options.longEMAKey ||  ("ema" + longPeriod);
@@ -175,7 +174,7 @@ function macd_e_update<IndexT = any> (
             histogram: macd - signal
         }
         ++index;
-        currentMACD = currentMACD.appendPair(index, macd_v);
+        currentMACD = currentMACD.appendPair([index, macd_v]);
     }
     return currentMACD;
 
