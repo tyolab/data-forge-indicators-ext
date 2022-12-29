@@ -19,8 +19,7 @@ export function computeRange(day1: any, day2: any): number {
 //
 export function computeEma(newValue: number, preValue: number, multiplier: number): number {
     return (multiplier * newValue) + ((1 - multiplier) * preValue);
-
-
+}
 
 //
 // Compute exponent weighted average for a bunch of numbers.
