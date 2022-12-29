@@ -3,9 +3,9 @@
  */
 
 export function computeRange(day1: any, day2: any): number {
-    if (day1  === undefined)
+    if (!day1)
         return Math.abs(day2.high - day2.low);
-    if (day2 === undefined)
+    if (!day2)
         return 0;
     const r1 = Math.abs(day2.high - day2.low);
     const r2 = Math.abs(day2.high - day1.close);
