@@ -101,6 +101,8 @@ function chandelier_exit<IndexT = any> (
 
     for (let i = pos; i < count; ++i) {
         let last_pos = i - period;
+        if (last_pos < 0)
+            continue;
         let window = this.between(last_pos, i);
         let row = this.at(i);
         row[key] = computeChandelierExit(window, multiplier);

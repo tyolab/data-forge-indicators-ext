@@ -163,6 +163,8 @@ function macd_e_update<IndexT = any> (
   
         let shortEMA = row[options.shortEMAKey];
         let longEMA = row[options.longEMAKey];
+        if (!shortEMA || !longEMA)
+            continue;
         let macd = shortEMA - longEMA;
         let signal = computeEma(macd, last_macd.macd, signalPeriodMultiplier);
 

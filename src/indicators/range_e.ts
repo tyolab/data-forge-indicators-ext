@@ -38,11 +38,12 @@ function range_e_update<IndexT = number>(this: IDataFrame<number, any>, update_p
     let count = this.count(); 
     let pos: number = count - update_period;
 
-    for (let i = pos; i < count; ++i) {
-        const lastRow = this.at(i - 1);
-        let row = this.at(i);
-        row[key] = computeRange(lastRow, row);
-    }
+    if (pos >= 0)
+        for (let i = pos; i < count; ++i) {
+            const lastRow = i > 0 ? this.at(i - 1) : null;
+            let row = this.at(i);
+            row[key] = computeRange(lastRow, row);
+        }
     return this;
 }
 DataFrame.prototype.range_e = range_e;

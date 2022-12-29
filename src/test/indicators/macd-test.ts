@@ -28,4 +28,9 @@ describe('macd', () => {
 
     });
 
+    /**
+     * @todo
+     * 
+     * add test for macd_e_update
+     */
 });

@@ -3,6 +3,10 @@
  */
 
 export function computeRange(day1: any, day2: any): number {
+    if (day1  === undefined)
+        return Math.abs(day2.high - day2.low);
+    if (day2 === undefined)
+        return 0;
     const r1 = Math.abs(day2.high - day2.low);
     const r2 = Math.abs(day2.high - day1.close);
     const r3 = Math.abs(day2.low - day1.close);
@@ -15,7 +19,7 @@ export function computeRange(day1: any, day2: any): number {
 //
 export function computeEma(newValue: number, preValue: number, multiplier: number): number {
     return (multiplier * newValue) + ((1 - multiplier) * preValue);
-}
+
 
 
 //
