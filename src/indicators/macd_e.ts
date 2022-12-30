@@ -158,15 +158,23 @@ function macd_e_update<IndexT = any> (
     // getting the data
     for (let i = pos; i < count; ++i) {
         let row: any = dataFrame.at(i);
-        let last_macd = currentMACD.last();
-        let index = currentMACD.getIndex().last();
   
         let shortEMA = row[options.shortEMAKey];
         let longEMA = row[options.longEMAKey];
         if (!shortEMA || !longEMA)
             continue;
+
         let macd = shortEMA - longEMA;
-        let signal = computeEma(macd, last_macd.macd, signalPeriodMultiplier);
+        let signal, index = 0;
+
+        if (currentMACD.count() > 0) {
+            let last_macd = currentMACD.last();
+            index = currentMACD.getIndex().last();
+            signal = computeEma(macd, last_macd.macd, signalPeriodMultiplier);
+        } 
+        else {
+            signal = macd;
+        }
 
         let macd_v = {
             shortEMA: shortEMA,
