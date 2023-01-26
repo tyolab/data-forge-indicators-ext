@@ -18,7 +18,9 @@ export enum TimeFrame {
     Hours_4 = 240,          // "4h",
     Day =  1440,            // "day",
     Week = 10080,           // "week",
-    Month = 43800,          // "month"
+    Month = 43800,          // "month",
+    Month_3 = 131400,       // "3months",
+    Year = 525600,          // "year",
 }
 
 export interface TickColumns {
@@ -206,6 +208,8 @@ function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeF
         maxtrading = 7;
     else if (timeframe === TimeFrame.Month) 
         maxtrading = 31;
+    else if (timeframe === TimeFrame.Month_3) 
+        maxtrading = 3;        
 
     // for market normally we use Monday as the start of the week
     // and Sunday (if there is) as the end
@@ -213,10 +217,14 @@ function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeF
     let row: any = undefined;
     const df = this;
     var lasttrading = undefined;
+    var lasttrading_month: number = -1;
+    var lasttrading_year: number = -1;
     var lastday = undefined;
     for (const value of df) {
         const d = value.time;
-        let day: number = 0;
+        let day: number = -1;
+        let month: number = -1;
+        let year: number = -1;
         if (timeframe === TimeFrame.Week) {
             day = d.getDay();
 
@@ -226,15 +234,31 @@ function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeF
         }
         else if (timeframe === TimeFrame.Month)
             day = d.getDate();
+        else if (timeframe === TimeFrame.Month_3) {
+            month = d.getMonth() % 3;
+            year = d.getFullYear();
+        }
+        else if (timeframe === TimeFrame.Year) {
+            year = d.getFullYear();
+        }
         else
             break;
 
         if (lasttrading === undefined) 
             lasttrading = day;
+
         if (lastday === undefined)
             lastday = value;
 
-        if (day < lasttrading /* && week === undefined */) {
+        if (lasttrading_month === -1)
+            lasttrading_month = month;
+
+        if (lasttrading_year === -1)
+            lasttrading_year = year;
+
+        if ((day != -1 && day < lasttrading) /* && week === undefined */
+            || (month != -1 && month < lasttrading_month)
+            || (year != -1 && year > lasttrading_year)) {
             if (row !== undefined) {
                 row.close = lastday.close;
                 rows.push(row);
@@ -252,8 +276,11 @@ function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeF
         if (value.low < row.low)
             row.low = value.low;
 
-        lasttrading = day;
         lastday = value;
+
+        lasttrading = day;
+        lasttrading_month = month;
+        lasttrading_year = year;
     }
 
     if (row !== undefined && lastday !== undefined) {
