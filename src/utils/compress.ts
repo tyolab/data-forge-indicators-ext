@@ -256,8 +256,8 @@ function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeF
         if (lasttrading_year === -1)
             lasttrading_year = year;
 
-        if ((day != -1 && day < lasttrading) /* && week === undefined */
-            || (month != -1 && month < lasttrading_month)
+        if ((day != -1 && day <= lasttrading) /* && week === undefined */
+            || (month != -1 && month <= lasttrading_month)
             || (year != -1 && year > lasttrading_year)) {
             if (row !== undefined) {
                 row.close = lastday.close;
