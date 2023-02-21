@@ -69,7 +69,7 @@ function computeBB<IndexT = any>(window: ISeries<IndexT, number>, stdDevMultUppe
  * @returns Returns a dataframe with columns value, upper, middle, lower, and stddev.
  */
 function bollinger_e<IndexT = any> (
-    this: ISeries<IndexT, number>, 
+    this: ISeries<number, any>, 
     period: number = 20,
     stdDevMultUpper: number = 2, 
     stdDevMultLower: number = 2
@@ -79,16 +79,27 @@ function bollinger_e<IndexT = any> (
     assert.isNumber(stdDevMultUpper, "Expected 'stdDevMultUpper' parameter to 'Series.bollinger' to be a number that specifies multipler to compute the upper band from the standard deviation.");
     assert.isNumber(stdDevMultLower, "Expected 'stdDevMultLower' parameter to 'Series.bollinger' to be a number that specifies multipler to compute the upper band from the standard deviation.");
 
-    return this.rollingWindow(period)
-        .select<[IndexT, IBollingerBand]>(window => {
+    // return this.rollingWindow(period)
+    //     .select<[IndexT, IBollingerBand]>(window => {
 
-            return [
-                window.getIndex().last(), 
-                computeBB(window, stdDevMultUpper, stdDevMultLower)
-            ];
-        })
-        .withIndex(pair => pair[0])
-        .inflate(pair => pair[1]);
+    //         return [
+    //             window.getIndex().last(), 
+    //             computeBB(window, stdDevMultUpper, stdDevMultLower)
+    //         ];
+    //     })
+    //     .withIndex(pair => pair[0])
+    //     .inflate(pair => pair[1]);
+    let count = this.count(); 
+    let rows = [];
+    for (let i = 0; i < count; ++i) {
+        let last_pos = i < (period - 1) ? 0  : i - period + 1;
+        let window = this.between(last_pos, i);
+
+        const value = computeBB(window, stdDevMultUpper, stdDevMultLower);
+        rows.push(value);
+    }
+
+    return new DataFrame(rows);    
 };
 
  function bollinger_e_update<IndexT = any> (
@@ -111,9 +122,7 @@ function bollinger_e<IndexT = any> (
     let value_key = options["value_key"] || 'close';
 
     for (let i = pos; i < count; ++i) {
-        let last_pos = i - period;
-        if (last_pos < 0)
-            continue;
+        var last_pos = i < period ? 0  : i - period;
         let window = this.between(last_pos, i).getSeries(value_key);
         let row = this.at(i);
         const value = computeBB(window, stdDevMultUpper, stdDevMultLower);
