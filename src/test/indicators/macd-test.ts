@@ -22,6 +22,8 @@ describe('macd', () => {
        const macd = newseries.macd_e(4, 10, 2);
        const row: any = macd.at(4);
        let shortEma = row.shortEMA;
+
+       let new_df = df.withSeries('macd', new Series(macd.toArray()));
        expect(shortEma.toFixed(2)).to.equal('22.18');
 
        // console.log(macd.merge(df).toString());

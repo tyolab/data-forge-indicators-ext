@@ -29,24 +29,42 @@ declare module "data-forge/build/lib/dataframe" {
     }
 }
 
-function ema_e<IndexT = any>(this: ISeries<IndexT, number>, period: number): ISeries<IndexT, any> {
+function ema_e<IndexT = number>(this: ISeries<number, number>, period: number): ISeries<IndexT, any> {
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.ema' to be a number that specifies the time period of the moving average.");
 
     const multiplier = (2 / (period + 1));
-    let preValue = this.take(period).average();
+
+    let count = this.count(); 
+    let rows = [];
+    let preValue = this.first();
+    rows.push(preValue);
+    for (let i = 1; i < count; ++i) {
+        let value: number = this.at(i)!;
+        if (i < period) {
+            let window = this.between(0, i);
+            value = window.average();
+        }
+        else {
+            value = computeEma(value, preValue, multiplier);
+        }
+        rows.push(value);
+        preValue = value;
+    }
+    return new Series(rows);
+
     // WhichIndex.Start may be the right side of the series in this sense.
-    let series = this.skip(period);
-    let counter = 0;
-    let newSeries = series.map((window, index) => {
-        let emaValue = computeEma(window, preValue, multiplier);
-        preValue = emaValue;
-        ++counter;
-        return emaValue;
-    });
-    // we should only use this way, as the selector above can be called so many times
-    let pairs = newSeries.toPairs();
-    return new Series({pairs: pairs});
+    // let series = this.skip(period);
+    // let counter = 0;
+    // let newSeries = series.map((window, index) => {
+    //     let emaValue = computeEma(window, preValue, multiplier);
+    //     preValue = emaValue;
+    //     ++counter;
+    //     return emaValue;
+    // });
+    // // we should only use this way, as the selector above can be called so many times
+    // let pairs = newSeries.toPairs();
+    // return new Series({pairs: pairs});
 
     /**
      * The following code is for refrencing

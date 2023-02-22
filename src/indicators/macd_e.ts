@@ -92,10 +92,10 @@ function macd_e<IndexT = any> (
 
     const shortEMA = this.ema_e(shortPeriod)
     const longEMA = this.ema_e(longPeriod);
-    const macd = shortEMA.skip(longPeriod - shortPeriod)
+    const macd = shortEMA/* .skip(longPeriod - shortPeriod) */
         .zip(longEMA, (short, long) => short - long);
     const signal = macd.ema_e(signalPeriod);
-    const histogram = macd.skip(signalPeriod)
+    const histogram = macd/* .skip(signalPeriod) */
         .zip(signal, (macd, signal) => {
             let diff = macd - signal;
             return diff;

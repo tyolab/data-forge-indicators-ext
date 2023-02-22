@@ -108,13 +108,13 @@ describe('ema', () => {
             '23.08',          
         ];
 
-        const newdf = df.setIndex('pos');
+        const newdf = df; // .setIndex('pos');
 
         const row = newdf.at(27);
-        expect(row.value).to.equal(22.68);
+        expect(row.value).to.equal(23.1);
 
         // for last 10 days sma
-        // window function acctually return a series of 3 windows in this case
+        // window function actually return a series of 3 windows in this case
         // let periodSeries: any = series.window(10, WhichIndex.Start).select(window => window.average());
 
         let series = newdf.getSeries('value');
@@ -123,26 +123,26 @@ describe('ema', () => {
         expect(smaStr).to.equal('22.22');
 
         const emaSeries = series.ema_e(10).bake();
-        const emarow = emaSeries.at(11);
+        const emarow = emaSeries.at(10);
         expect(emarow.toFixed(2)).to.equal('22.21');
 
         const expectedEma = '22.92'; 
 
-        let newDataFrame = newdf.withSeries('ema', emaSeries).appendPair([30, {pos: 30, value: 22.17}]);
+        let newDataFrame = newdf.withSeries('ema', emaSeries).appendPair([newdf.count(), {pos: newdf.count() + 1, value: 22.17}]);
         newDataFrame = newDataFrame.resetIndex().ema_e_update(10, 1, {key: "ema", value_key: "value"});
         let newEma = newDataFrame.getSeries('ema').at(newDataFrame.count() - 1).toFixed(2);
         expect(newEma).to.equal(expectedEma);
 
         // adding new value
-        const newSeries = series.appendPair([30, 22.17]).bake();
-        const newEmaSeries = emaSeries.ema_update(30, 22.17, 10).bake();
+        const newSeries = series.appendPair([29, 22.17]).bake();
+        const newEmaSeries = emaSeries.ema_update(29, 22.17, 10).bake();
         const lastEma = newEmaSeries.last();
         expect(lastEma.toFixed(2)).to.equal(expectedEma);
 
         // const mergedSeries = series.skip(10).merge(newEmaSeries);
         // const zippedSeries = series.skip(10).zip(newEmaSeries);
         const emadf = df.withSeries('ema', newEmaSeries);
-        const lastemarow = emadf.at(25);
+        const lastemarow = emadf.at(24);
 
        expect(lastemarow.ema.toFixed(2)).to.equal('23.40');
     });
