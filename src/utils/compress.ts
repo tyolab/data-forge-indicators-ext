@@ -216,14 +216,17 @@ function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeF
     // we can't use Series.window function for it
     let row: any = undefined;
     const df = this;
-    var lasttrading = undefined;
+    var lasttrading_day: number = -1;
+    // var lasttrading_day2: number = -1;
     var lasttrading_month: number = -1;
+    var lasttrading_month2: number = -1;
     var lasttrading_year: number = -1;
     var lastday = undefined;
     for (const value of df) {
         const d = value.time;
         let day: number = -1;
         let month: number = -1;
+        let month2: number = -1;
         let year: number = -1;
         if (timeframe === TimeFrame.Week) {
             day = d.getDay();
@@ -232,11 +235,15 @@ function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeF
                 day = maxtrading;
             }
         }
-        else if (timeframe === TimeFrame.Month)
-            day = d.getDate();
+        else if (timeframe === TimeFrame.Month) {
+            //day = d.getDate();
+            month2 = d.getMonth();
+            year = d.getFullYear();
+        }
         else if (timeframe === TimeFrame.Month_3) {
             month = d.getMonth() % 3;
-            year = d.getFullYear();
+            month2 = d.getMonth();
+            year = d.getFullYear()
         }
         else if (timeframe === TimeFrame.Year) {
             year = d.getFullYear();
@@ -244,32 +251,42 @@ function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeF
         else
             break;
 
-        if (lasttrading === undefined) 
-            lasttrading = day;
+        // if (day > -1 && lasttrading_day === -1) 
+        //     lasttrading_day = day;
 
         if (lastday === undefined)
             lastday = value;
 
-        if (lasttrading_month === -1)
+        if (month > -1 && lasttrading_month === -1)
             lasttrading_month = month;
+
+        if (month2 > -1 && lasttrading_month2 === -1)
+            lasttrading_month2 = month2;            
 
         if (lasttrading_year === -1)
             lasttrading_year = year;
 
-        if ((day != -1 && day <= lasttrading) /* && week === undefined */
-            || (month != -1 && month <= lasttrading_month)
-            || (year != -1 && year > lasttrading_year)) {
+        if ((day != -1 && day <= lasttrading_day) // not perfect because it could mix two weeks together 
+                                                  // if the first week starts and end
+            // || (day2 != -1 && (day2 - lasttrading_day2) >= maxtrading) /* && week === undefined */
+            || (month != -1 && (month < lasttrading_month || (month2 - lasttrading_month2) > 2))
+            || (month == -1 && month2 != -1 && month2 > lasttrading_month2) 
+            || (year > lasttrading_year)) {
             if (row !== undefined) {
+                row.time = lastday.time;
                 row.close = lastday.close;
+                row.volume += lastday.volume;
                 rows.push(row);
             }
             row = undefined;
         }
 
         if (row === undefined)
-            row = {time: value.time, open: value.open, high: value.high, low: value.low, close: value.close} as OHLC;
-        else
+            row = {time: value.time, open: value.open, high: value.high, low: value.low, close: value.close, volume: value.volume} as OHLC;
+        else {
             row.time = value.time;
+            row.volume += value.volume;
+        }
 
         if (value.high > row.high)
             row.high = value.high;
@@ -278,8 +295,10 @@ function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeF
 
         lastday = value;
 
-        lasttrading = day;
+        lasttrading_day = day;
+        // lasttrading_day2 = day2;
         lasttrading_month = month;
+        lasttrading_month2 = month2;
         lasttrading_year = year;
     }
 

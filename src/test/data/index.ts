@@ -95,7 +95,7 @@ let dataframe = dataForge.readFileSync(__dirname + "/gold.csv")
 .parseCSV();
 
 let this_dataframe = dataframe
-    .renameSeries({'"Date"': 'time'})
+    .renameSeries({'"Date"': 'time', "Vol.": "volume"})
     // .renameSeries({'Price': 'close'})
     // .renameSeries({'High': 'high'})
     // .renameSeries({'Open': 'open'})
