@@ -38,7 +38,7 @@ function ema_e<IndexT = any>(this: ISeries<any, number>, period: number): ISerie
     let rows = [];
     let preValue = this.first();
     
-    let i = 1;
+    let i = 0;
     for (let value of this) {
         if (i < period) {
             let window = this.between(0, i);
