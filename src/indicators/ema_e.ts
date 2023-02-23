@@ -29,18 +29,17 @@ declare module "data-forge/build/lib/dataframe" {
     }
 }
 
-function ema_e<IndexT = number>(this: ISeries<number, number>, period: number): ISeries<IndexT, any> {
+function ema_e<IndexT = any>(this: ISeries<any, number>, period: number): ISeries<IndexT, any> {
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.ema' to be a number that specifies the time period of the moving average.");
 
     const multiplier = (2 / (period + 1));
 
-    let count = this.count(); 
     let rows = [];
     let preValue = this.first();
-    rows.push(preValue);
-    for (let i = 1; i < count; ++i) {
-        let value: number = this.at(i)!;
+    
+    let i = 1;
+    for (let value of this) {
         if (i < period) {
             let window = this.between(0, i);
             value = window.average();
@@ -50,6 +49,7 @@ function ema_e<IndexT = number>(this: ISeries<number, number>, period: number): 
         }
         rows.push(value);
         preValue = value;
+        ++i;
     }
     return new Series(rows);
 
@@ -109,7 +109,7 @@ function ema_update<IndexT = any>(this: ISeries<IndexT, number>, newIndex: Index
  * @param value_key 
  * @returns 
  */
-function ema_e_update_from<IndexT = number>(this: IDataFrame<number, any>, period: number, update_period: number = 1, dataFrame: IDataFrame<number, any> = this, options: any = {}): IDataFrame<number, any> {
+function ema_e_update_from<IndexT = any>(this: IDataFrame<any, any>, period: number, update_period: number = 1, dataFrame: IDataFrame<number, any> = this, options: any = {}): IDataFrame<number, any> {
     var thisCount = this.count();
     var dataCount = dataFrame.count();
 
@@ -161,10 +161,10 @@ function ema_e_update_from<IndexT = number>(this: IDataFrame<number, any>, perio
 
     assert.isDefined(last[value_key], "Expected 'DataFrame.ema_e_update' to be called on a DataFrame that has a '" + value_key + "' column.");
 
+    const multiplier = (2 / (period + 1));
     for (let i = pos; i < dataCount; ++i) {
         let valueRow = dataFrame.at(i);
         let row = newDataFrame.at(i);
-        const multiplier = (2 / (period + 1));
 
         let newValue = valueRow[value_key];
         const value = computeEma(newValue, preValue, multiplier);

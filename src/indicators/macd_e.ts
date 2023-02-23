@@ -52,10 +52,12 @@ export interface IMacdEntry {
 
 declare module "data-forge/build/lib/series" {
     interface ISeries<IndexT, ValueT> {
+        macd_e2 (shortPeriod: number, longPeriod: number, signalPeriod: number): ISeries<any, IMacdEntry>;
         macd_e (shortPeriod: number, longPeriod: number, signalPeriod: number): IDataFrame<any, IMacdEntry>;
     }
 
     interface Series<IndexT, ValueT> {
+        macd_e2 (shortPeriod: number, longPeriod: number, signalPeriod: number): ISeries<any, IMacdEntry>;
         macd_e (shortPeriod: number, longPeriod: number, signalPeriod: number): IDataFrame<any, IMacdEntry>;
     }
 }
@@ -111,6 +113,62 @@ function macd_e<IndexT = any> (
         .withSeries('histogram', histogram);
 };
 
+function macd_e2<IndexT = number> (
+    this: ISeries<number, number>, 
+    shortPeriod: number,
+    longPeriod: number,
+    signalPeriod: number
+    ): ISeries<IndexT, IMacdEntry> {
+
+    assert.isNumber(shortPeriod, "Expected 'shortPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the short moving average.");
+    assert.isNumber(longPeriod, "Expected 'longPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the long moving average.");
+    assert.isNumber(signalPeriod, "Expected 'signalPeriod' parameter to 'Series.macd' to be a number that specifies the time period for the macd signal line.");
+
+    let rows: IMacdEntry[] = [];
+    let i = 0;
+    let preShortEMA: number, preLongEMA: number, preSignal: number;
+    let shortPeriodMultiplier = 2 / (shortPeriod + 1);
+    let longPeriodMultiplier = 2 / (longPeriod + 1);
+    let signalPeriodMultiplier = 2 / (signalPeriod + 1);
+    for (let value of this) {
+        let row: IMacdEntry = {};
+        if (i < shortPeriod) {
+            let window = this.between(0, i);
+            preShortEMA = row.shortEMA = window.average();
+        }
+        else {
+            preShortEMA = row.shortEMA = computeEma(value, preShortEMA!, shortPeriodMultiplier);
+        }
+
+        if (i < longPeriod) {
+            let window = this.between(0, i);
+            preLongEMA = row.longEMA = window.average();
+        }
+        else {
+            preLongEMA = row.longEMA = computeEma(value, preLongEMA!, longPeriodMultiplier);
+        }
+
+        row.macd = preShortEMA - preLongEMA;
+        rows.push(row);
+        ++i;
+    }
+
+    i = 0;
+    for (let row of rows) {
+        if (i < signalPeriod) {
+            let array = rows.slice(0, i);
+            let window = new DataFrame(array).getSeries('macd');
+            preSignal = row.signal = window.average();
+        }   
+        else {
+            preSignal = row.signal = computeEma(row.macd!, preSignal!, signalPeriodMultiplier);
+        }
+        row.histogram = row.macd! - preSignal;
+        ++i;
+    }
+    return new Series(rows);
+};
+
 /**
  * @todo
  */
@@ -128,9 +186,15 @@ function macd_e_update<IndexT = any> (
 
     let currentMACD = options.currentMACD;
 
-    if (!currentMACD) {
+    if (!currentMACD && !options.key) {
         let deflateKey: string = options.deflateKey || 'close';
-        return this.getSeries(deflateKey).macd_e(shortPeriod, longPeriod, signalPeriod);
+        return this.withSeries("macd", this.getSeries(deflateKey).macd_e2(shortPeriod, longPeriod, signalPeriod));
+    }
+
+    let with_key = false;
+    if (!currentMACD && options.key) {
+        currentMACD = this;
+        with_key = true;
     }
 
     assert.isNumber(shortPeriod, "Expected 'shortPeriod' parameter to 'Series.macd' to be a number that specifies the time period of the short moving average.");
@@ -156,21 +220,26 @@ function macd_e_update<IndexT = any> (
         dataFrame = dataFrame.ema_e_update(longPeriod, update_period, { key: longEMAKey, value_key: value_key});
 
     // getting the data
+    let currentMacdcount = currentMACD.count();
     for (let i = pos; i < count; ++i) {
         let row: any = dataFrame.at(i);
   
-        let shortEMA = row[options.shortEMAKey];
-        let longEMA = row[options.longEMAKey];
+        let shortEMA = row[shortEMAKey];
+        let longEMA = row[longEMAKey];
         if (!shortEMA || !longEMA)
             continue;
 
         let macd = shortEMA - longEMA;
         let signal, index = 0;
 
-        if (currentMACD.count() > 0) {
-            let last_macd = currentMACD.last();
-            index = currentMACD.getIndex().last();
-            signal = computeEma(macd, last_macd.macd, signalPeriodMultiplier);
+        if (currentMacdcount > 0) {
+            if (i > 0) {
+                let last_row:any = dataFrame.at(i - 1);
+                let last_macd = with_key ? last_row.macd : last_row;
+                signal = computeEma(macd, last_macd.signal, signalPeriodMultiplier);
+            }
+            else
+                signal = macd;
         } 
         else {
             signal = macd;
@@ -183,12 +252,19 @@ function macd_e_update<IndexT = any> (
             signal: signal,
             histogram: macd - signal
         }
-        ++index;
-        currentMACD = currentMACD.appendPair([index, macd_v]);
+
+        if (with_key)
+            row[options.key] = macd_v;
+        else {
+            index = currentMACD.getIndex().last();
+            ++index;
+            currentMACD = currentMACD.appendPair([index, macd_v]);
+        }
     }
     return currentMACD;
 
 };
 
 Series.prototype.macd_e = macd_e;
+Series.prototype.macd_e2 = macd_e2;
 DataFrame.prototype.macd_e_update = macd_e_update;
