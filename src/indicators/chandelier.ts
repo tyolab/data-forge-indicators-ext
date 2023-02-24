@@ -100,7 +100,7 @@ function chandelier_exit<IndexT = any> (
     let pos: number = count - update_period;
 
     for (let i = pos; i < count; ++i) {
-        let last_pos = i - period;
+        let last_pos = i - period + 1;
         if (last_pos < 0)
             continue;
         let window = this.between(last_pos, i);

@@ -203,7 +203,7 @@ function macd_e_update<IndexT = any> (
 
     // let key = options["key"] || 'macd';
     let value_key = options["value_key"] || 'close';
-
+    let key = options["key"] || 'macd';
     // and we will update the end of course
     let count = this.count();
     let pos: number = count - update_period;
@@ -235,7 +235,7 @@ function macd_e_update<IndexT = any> (
         if (currentMacdcount > 0) {
             if (i > 0) {
                 let last_row:any = dataFrame.at(i - 1);
-                let last_macd = with_key ? last_row.macd : last_row;
+                let last_macd = with_key ? last_row[key] : last_row;
                 signal = computeEma(macd, last_macd.signal, signalPeriodMultiplier);
             }
             else

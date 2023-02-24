@@ -89,7 +89,7 @@ function donchian_channel<IndexT = any> (
     let key: string = options['key'] || 'donchian_channel';
 
     for (let i = pos; i < count; ++i) {
-        let last_pos = i - period;
+        let last_pos = i - period + 1;
         if (last_pos < 0)
             continue;
         let window = this.between(last_pos, i);
