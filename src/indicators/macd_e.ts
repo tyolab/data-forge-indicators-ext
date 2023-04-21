@@ -236,7 +236,7 @@ function macd_e_update<IndexT = any> (
             if (i > 0) {
                 let last_row:any = dataFrame.at(i - 1);
                 let last_macd = with_key ? last_row[key] : last_row;
-                signal = computeEma(macd, last_macd.signal, signalPeriodMultiplier);
+                signal = (last_macd && last_macd.signal) ? computeEma(macd, last_macd.signal, signalPeriodMultiplier) : macd;
             }
             else
                 signal = macd;
@@ -258,7 +258,7 @@ function macd_e_update<IndexT = any> (
         else {
             index = currentMACD.getIndex().last();
             ++index;
-            currentMACD = currentMACD.appendPair([index, macd_v]);
+            currentMACD = currentMACD.appendPair([index, macd_v]).resetIndex();
         }
     }
     return currentMACD;
