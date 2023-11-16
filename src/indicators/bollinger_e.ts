@@ -90,12 +90,15 @@ function bollinger_e<IndexT = any> (
     //     .withIndex(pair => pair[0])
     //     .inflate(pair => pair[1]);
     let count = this.count(); 
-    let rows = [];
+    let rows: any = [];
     for (let i = 0; i < count; ++i) {
-        let last_pos = i < (period - 1) ? 0  : (i - period + 1);
-        let window = this.between(last_pos, i);
+        let value = null;
+        if (i >= (period - 1)) {
+            let last_pos = /* i < (period - 1) ? 0  :  */(i - period + 1);
+            let window = this.between(last_pos, i);
 
-        const value = computeBB(window, stdDevMultUpper, stdDevMultLower);
+            value = computeBB(window, stdDevMultUpper, stdDevMultLower);
+        }
         rows.push(value);
     }
 
