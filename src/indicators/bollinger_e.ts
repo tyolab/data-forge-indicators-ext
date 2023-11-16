@@ -125,11 +125,14 @@ function bollinger_e<IndexT = any> (
     let value_key = options["value_key"] || 'close';
 
     for (let i = pos; i < count; ++i) {
-        var last_pos = i < period ? 0  : (i - period + 1);
-        let window = this.between(last_pos, i).getSeries(value_key);
-        let row = this.at(i);
-        const value = computeBB(window, stdDevMultUpper, stdDevMultLower);
-        row[key] = value;
+        let value = null;
+        if (i >= (period - 1)) {
+            var last_pos = /* i < period ? 0  :  */(i - period + 1);
+            let window = this.between(last_pos, i).getSeries(value_key);
+            let row: any = this.at(i);
+            value = computeBB(window, stdDevMultUpper, stdDevMultLower);
+            row[key] = value;
+        }
     }
 
     return this;
