@@ -28,11 +28,11 @@ export interface IBollingerBand {
 
 declare module "data-forge/build/lib/series" {
     interface ISeries<IndexT, ValueT> {
-        bollinger_e (period: number, stdDevMultUpper: number, stdDevMultLower: number): IDataFrame<any, IBollingerBand>;
+        bollinger_e (period: number, stdDevMultUpper: number, stdDevMultLower: number): ISeries<IndexT, IBollingerBand>;
     }
 
     interface Series<IndexT, ValueT> {
-        bollinger_e (period: number, stdDevMultUpper: number, stdDevMultLower: number): IDataFrame<any, IBollingerBand>;
+        bollinger_e (period: number, stdDevMultUpper: number, stdDevMultLower: number): ISeries<IndexT, IBollingerBand>;
     }
 }
 
@@ -73,7 +73,7 @@ function bollinger_e<IndexT = any> (
     period: number = 20,
     stdDevMultUpper: number = 2, 
     stdDevMultLower: number = 2
-    ): IDataFrame<IndexT, IBollingerBand> {
+    ): ISeries<IndexT, IBollingerBand> {
 
     assert.isNumber(period, "Expected 'period' parameter to 'Series.bollinger' to be a number that specifies the time period of the moving average.");
     assert.isNumber(stdDevMultUpper, "Expected 'stdDevMultUpper' parameter to 'Series.bollinger' to be a number that specifies multipler to compute the upper band from the standard deviation.");
@@ -102,7 +102,7 @@ function bollinger_e<IndexT = any> (
         rows.push(value);
     }
 
-    return new DataFrame(rows);    
+    return new Series(rows);    
 };
 
  function bollinger_e_update<IndexT = any> (

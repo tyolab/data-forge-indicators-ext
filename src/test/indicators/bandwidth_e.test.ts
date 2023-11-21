@@ -19,6 +19,8 @@ describe('bandwidth_e', () => {
 
        const bandwidth = newseries.bandwidth_e();
 
+       assert.equal(bandwidth.count(), newseries.count());
+
        console.log(bandwidth.count())
     });
 

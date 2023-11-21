@@ -1,13 +1,12 @@
 import { ISeries, Series, DataFrame, IDataFrame } from "data-forge";
-import { IBollingerBand } from "./bollinger_e";
 
-declare module "data-forge/build/lib/dataframe" {
-    interface IDataFrame<IndexT, ValueT> {
+declare module "data-forge/build/lib/series" {
+    interface Series<IndexT, ValueT> {
         bandwidth_e(): ISeries<IndexT, number>;
         bandwidth_p(): ISeries<IndexT, number>;
     }
 
-    interface DataFrame<IndexT, ValueT> {
+    interface ISeries<IndexT, ValueT> {
         bandwidth_e(): ISeries<IndexT, number>;
         bandwidth_p(): ISeries<IndexT, number>;
     }
@@ -18,9 +17,11 @@ declare module "data-forge/build/lib/dataframe" {
  * 
  *
  */
-function bandwidth_p<IndexT = any>(this: IDataFrame<IndexT, any>): ISeries<IndexT, number> {
-    return this.deflate(
+function bandwidth_p<IndexT = any>(this: ISeries<IndexT, any>): ISeries<IndexT, number> {
+    return this.select(
         (bb) => {
+            if (!bb)
+                return 0;
             let band = bb.bollinger || bb.bb || bb;
             return (band.upper - band.lower) / (band.middle);
         }
@@ -34,14 +35,17 @@ function bandwidth_p<IndexT = any>(this: IDataFrame<IndexT, any>): ISeries<Index
  * @param this 
  * @returns 
  */
-function bandwidth_e<IndexT = any>(this: IDataFrame<IndexT, any>): ISeries<IndexT, number> {
-    return this.deflate(
+function bandwidth_e<IndexT = any>(this: ISeries<IndexT, any>): ISeries<IndexT, number> {
+    return this.select(
         (bb) => {
+            if (!bb)
+                return 0;
+
             let band = bb.bollinger || bb.bb || bb;
             return (band.upper - band.lower);
         }
         );
 };
 
-DataFrame.prototype.bandwidth_p = bandwidth_p;
-DataFrame.prototype.bandwidth_e = bandwidth_e;
+Series.prototype.bandwidth_p = bandwidth_p;
+Series.prototype.bandwidth_e = bandwidth_e;
