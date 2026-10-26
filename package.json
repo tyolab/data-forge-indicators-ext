@@ -22,15 +22,15 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/data-forge/data-forge-indicators-ext.git"
+        "url": "git+https://github.com/tyolab/data-forge-indicators-ext.git"
     },
     "keywords": [],
     "author": "eric@tyo.com.au",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/data-forge/data-forge-indicators-ext/issues"
+        "url": "https://github.com/tyolab/data-forge-indicators-ext/issues"
     },
-    "homepage": "https://github.com/data-forge/data-forge-indicators-ext#readme",
+    "homepage": "https://github.com/tyolab/data-forge-indicators-ext#readme",
     "dependencies": {
         "moment": "^2.29.1"
     },
