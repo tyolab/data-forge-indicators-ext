@@ -273,9 +273,20 @@ function compress<IndexT = any>(this: IDataFrame<IndexT, OHLC>, timeframe: TimeF
             || (month == -1 && month2 != -1 && month2 > lasttrading_month2) 
             || (year > lasttrading_year)) {
             if (row !== undefined) {
+                // `lastday` is the final bar of the period being closed, and the loop below has
+                // ALREADY accumulated it (`row.volume += value.volume`). Re-assigning time and close
+                // from it is idempotent and correct; `+=` is not, so adding its volume again
+                // double-counted the last bar of every period but the last one -- the end-of-loop
+                // flush below only re-assigns close, which is why the final period was always right.
+                //
+                // Measured on ASX BHP weeklies 2026 before the fix:
+                //   W 2026-06-18  5 days = 68,665,738  reported 106,526,647 (= +37,860,909, the 19 Jun bar)
+                //   W 2026-07-30  5 days = 36,442,587  reported  47,956,654 (= +11,514,067, the 31 Jul bar)
+                //   W 2026-06-04  5 days = 37,622,362  reported  45,008,035 (= + 7,385,673, the  4 Jun bar)
+                // OHLC was unaffected, so this only ever showed up in volume-derived figures (tv, uv,
+                // turnover screens, the board's volume filters).
                 row.time = lastday.time;
                 row.close = lastday.close;
-                row.volume += lastday.volume;
                 rows.push(row);
             }
             row = undefined;
